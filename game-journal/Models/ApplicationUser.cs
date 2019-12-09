@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.AspNetCore.Identity;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
@@ -6,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace game_journal.Models
 {
-    public class ApplicationUser
+    public class ApplicationUser : IdentityUser
     {
         [Required]
         [Display(Name = "First Name")]
@@ -21,6 +22,6 @@ namespace game_journal.Models
 
         public List<Game> Games { get; set; }
 
-        public List<Console> Consoles { get; set; }
+        public List<GameConsole> Consoles { get; set; }
     }
 }

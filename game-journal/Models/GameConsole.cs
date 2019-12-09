@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace game_journal.Models
 {
-    public class Console
+    public class GameConsole
     {
         // Example: Sony
         [Required]
