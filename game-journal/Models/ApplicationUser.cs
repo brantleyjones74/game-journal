@@ -17,9 +17,6 @@ namespace game_journal.Models
         [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
-        [Required]
-        public string Username { get; set; }
-
         public List<Game> Games { get; set; }
 
         public List<Platform> Consoles { get; set; }
