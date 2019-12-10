@@ -18,10 +18,10 @@ namespace game_journal.Models
         public string LastName { get; set; }
 
         [Required]
-        public string Email { get; set; }
+        public string Username { get; set; }
 
         public List<Game> Games { get; set; }
 
-        public List<GameConsole> Consoles { get; set; }
+        public List<Platform> Consoles { get; set; }
     }
 }

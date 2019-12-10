@@ -5,6 +5,9 @@ namespace game_journal.Models
 {
     public class Game
     {
+        [Key]
+        public string GameId { get; set; }
+
         [Required]
         public string Name { get; set; }
 
@@ -22,8 +25,8 @@ namespace game_journal.Models
 
         public string UserId { get; set; }
 
-        /* Stretch Goals */
+        /* Stretch Goals
         public bool IsAvailable { get; set; }
-        public bool IsOwned { get; set; }
+        public bool IsOwned { get; set; } */
     }
 }

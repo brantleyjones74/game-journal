@@ -6,8 +6,11 @@ using System.Threading.Tasks;
 
 namespace game_journal.Models
 {
-    public class GameConsole
+    public class Platform
     {
+        [Key]
+        public int PlatformId { get; set; }
+
         // Example: Sony
         [Required]
         public string Manufacturer { get; set; }
