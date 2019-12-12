@@ -77,9 +77,9 @@ namespace game_journal.Controllers
                 gameFromApi.Add(newGame);
             }
 
-            Game singleGame = gameFromApi[0];
+            Game singleGameFromApi = gameFromApi[0];
             
-            return View(singleGame);
+            return View(singleGameFromApi);
         }
 
         // GET: Games/Create

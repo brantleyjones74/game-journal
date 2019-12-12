@@ -1,18 +1,18 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
 using System.Linq;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace game_journal.Models
 {
-    public class Platform
+    public class Genre
     {
         [JsonProperty("id")]
-        public int PlatformId { get; set; }
+        public int GenreId { get; set; }
 
-        [JsonProperty("name")]
+        [JsonPropertyName("name")]
         public string Name { get; set; }
     }
 }

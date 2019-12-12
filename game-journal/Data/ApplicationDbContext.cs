@@ -12,6 +12,7 @@ namespace game_journal.Data
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
         public DbSet<Game> Games { get; set; }
         public DbSet<Platform> Platforms { get; set; }
-
+        public DbSet<Cover> Covers { get; set; }
+        public DbSet<Genre> Genres { get; set; }
     }
 }
