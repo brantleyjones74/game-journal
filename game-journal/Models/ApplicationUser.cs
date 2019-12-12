@@ -9,6 +9,11 @@ namespace game_journal.Models
 {
     public class ApplicationUser : IdentityUser
     {
+        public ApplicationUser()
+        {
+
+        }
+
         [Required]
         [Display(Name = "First Name")]
         public string FirstName { get; set; }
@@ -17,8 +22,8 @@ namespace game_journal.Models
         [Display(Name = "Last Name")]
         public string LastName { get; set; }
 
-        public List<Game> Games { get; set; }
+        public ICollection<Game> Games { get; set; }
 
-        public List<Platform> Consoles { get; set; }
+        public ICollection<Platform> Consoles { get; set; }
     }
 }
