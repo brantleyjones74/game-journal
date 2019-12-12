@@ -1,18 +1,14 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
 namespace game_journal.Models
 {
-    public class Rootobject
-    {
-        public Game[] id { get; set; }
-    }
     public class Game
     {
-        [Required]
         [Key]
-        [JsonPropertyName("id")]
+        [JsonProperty("id")]
         public int GameId { get; set; }
 
         [Required]
@@ -20,21 +16,22 @@ namespace game_journal.Models
         public string Name { get; set; }
 
         [JsonPropertyName("genres")]
-        public int Genre { get; set; }
+        public string Genre { get; set; }
 
-        //public string Genre { get; set; }
+        [JsonPropertyName("first_release_date")]
+        [Display(Name = "Original Release Date")]
+        public DateTime ReleaseDate { get; set; }
 
-        //public DateTime ReleaseDate { get; set; }
+        [JsonPropertyName("cover")]
+        public string ImgUrl { get; set; }
 
-        //public string ImgUrl { get; set; }
+        public string Notes { get; set; }
 
-        //public string Notes { get; set; }
+        public int HoursPlayed { get; set; }
 
-        //public int HoursPlayed { get; set; }
+        public int UserRating { get; set; }
 
-        //public int UserRating { get; set; }
-
-        //public string UserId { get; set; }
+        public string UserId { get; set; }
 
         /* Stretch Goals
         public bool IsAvailable { get; set; }

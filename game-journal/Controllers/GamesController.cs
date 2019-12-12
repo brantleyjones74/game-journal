@@ -20,10 +20,12 @@ namespace game_journal.Controllers
     public class GamesController : Controller
     {
         private readonly IHttpClientFactory _clientFactory;
+        private readonly ApplicationDbContext _context;
 
-        public GamesController(IHttpClientFactory clientFactory)
+        public GamesController(ApplicationDbContext context, IHttpClientFactory clientFactory)
         {
             _clientFactory = clientFactory;
+            _context = context;
         }
         // GET: Games
         public async Task<IActionResult> IndexAsync() // returns a list of games from DB
@@ -32,17 +34,16 @@ namespace game_journal.Controllers
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
             List<Game> gamesFromApi = new List<Game>();
 
-            foreach (var game in deserializedGame)
+            foreach (var game in deserializedGames)
             {
                 Game newGame = new Game
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    Genre = game.Genre
                 };
                 gamesFromApi.Add(newGame);
             }
@@ -51,22 +52,35 @@ namespace game_journal.Controllers
         }
 
         // GET: Games/Details/5
-        //public async Task<IActionResult> Details(string id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
+        public async Task<IActionResult> Details(string id) // gets detail of selected game
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-        //    var game = await _context.Games
-        //        .FirstOrDefaultAsync(m => m.GameId == id);
-        //    if (game == null)
-        //    {
-        //        return NotFound();
-        //    }
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
-        //    return View(game);
-        //}
+            List<Game> gameFromApi = new List<Game>();
+
+            foreach (var game in deserializedGame)
+            {
+                Game newGame = new Game
+                {
+                    GameId = game.GameId,
+                    Name = game.Name,
+                };
+                gameFromApi.Add(newGame);
+            }
+
+            Game singleGame = gameFromApi[0];
+            
+            return View(singleGame);
+        }
 
         // GET: Games/Create
         //public IActionResult Create()
