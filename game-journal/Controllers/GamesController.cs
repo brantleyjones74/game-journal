@@ -59,7 +59,7 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,genres");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,genres,cover,first_release_date");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -73,7 +73,9 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    GenreIds = game.GenreIds
+                    GenreIds = game.GenreIds,
+                    CoverId = game.CoverId,
+                    ReleaseDate = game.ReleaseDate
                 };
                 searchedGame.Add(newGame);
             }
@@ -111,26 +113,44 @@ namespace game_journal.Controllers
             }
 
             Game singleGameFromApi = gameFromApi[0];
-
+            ViewBag.gameObj = singleGameFromApi;
             return View(singleGameFromApi);
         }
 
-        public async Task<IActionResult> SaveGame(int id)
+        public async Task<IActionResult> SaveGame(Game singleGameFromApi)
         {
-            // save id in a gameId variable
-            var gameId = id;
             // get user 
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // gets user id
-            var game = _context.Games.Where(g => g.GameId == gameId);
-            var newGame = new Game
-            {
-                UserId = userId
-            };
 
-            _context.Add(newGame);
+            singleGameFromApi.UserId = userId;
+            //singleGameFromApi.Name = Request.Form["Name"].ToString();
+
+            //var savedGameId = GameId;
+            //var savedGameName = Name;
+
+            //new Game savedGame = new Game
+            //{
+
+            //}
+
+            // model state value to save. refactor second create method
+
+            //_context.Add(savedGame);
             await _context.SaveChangesAsync();
-            
+
             return View();
+        }
+
+
+        public async Task<IActionResult> GetGameById(int id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+
+            return Ok(deserializedGame);
         }
         // GET: Games/Create
         //public IActionResult Create()
@@ -238,5 +258,7 @@ namespace game_journal.Controllers
         //{
         //    return _context.Games.Any(e => e.GameId == id);
         //}
+
+
     }
 }
