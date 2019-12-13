@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Text.Json.Serialization;
 
 namespace game_journal.Models
@@ -19,20 +20,20 @@ namespace game_journal.Models
 
         [JsonPropertyName("first_release_date")]
         [Display(Name = "Release Date")]
-        public DateTime ReleaseDate { get; set; }
-
-        [JsonPropertyName("url")]
-        public string GameUrl { get; set; }
+        public int ReleaseDate { get; set; }
 
         // References to other models
         [JsonPropertyName("genres")]
-        public List<Genre> Genres { get; set; }
+        [NotMapped]
+        public List<int> GenreIds { get; set; }
 
         [JsonPropertyName("cover")]
-        public string ImgUrl { get; set; }
+        [NotMapped]
+        public int CoverId { get; set; }
 
         [JsonProperty("platforms")]
-        public List<Platform> Platforms { get; set; }
+        [NotMapped]
+        public List<int> PlatformIds { get; set; }
 
         // User entered properties
         public string Notes { get; set; }

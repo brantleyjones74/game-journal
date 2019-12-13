@@ -9,7 +9,6 @@ using game_journal.Data;
 using game_journal.Models;
 using System.Net.Http;
 using System.Web;
-//using Newtonsoft.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
@@ -28,7 +27,7 @@ namespace game_journal.Controllers
             _context = context;
         }
         // GET: Games
-        public async Task<IActionResult> IndexAsync() // returns a list of games from DB
+        public async Task<IActionResult> IndexAsync(string searchString) // returns a list of games from DB
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
             var client = _clientFactory.CreateClient("igdb");
@@ -48,7 +47,40 @@ namespace game_journal.Controllers
                 gamesFromApi.Add(newGame);
             }
 
+           // var games = from g in gamesFromApi.Include(g => g.Name)
+             //           select g;
+
+            //if (!String.IsNullOrEmpty(searchString))
+            //{
+                //gamesFromApi = gamesFromApi.Where(g => g.Name.Contains(searchString)).ToList();
+            //}
+
             return View(gamesFromApi);
+        }
+
+        // GET: Search Games By Name
+        public async Task<IActionResult> SearchByName(string gameName)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+
+            List<Game> searchedGame = new List<Game>();
+
+            foreach (var game in deserializedGames)
+            {
+                Game newGame = new Game
+                {
+                    GameId = game.GameId,
+                    Name = game.Name,
+                };
+                searchedGame.Add(newGame);
+            }
+
+            return View(searchedGame);
+
         }
 
         // GET: Games/Details/5
@@ -73,12 +105,14 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
+                    ReleaseDate = game.ReleaseDate,
+
                 };
                 gameFromApi.Add(newGame);
             }
 
             Game singleGameFromApi = gameFromApi[0];
-            
+
             return View(singleGameFromApi);
         }
 
