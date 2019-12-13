@@ -13,6 +13,9 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace game_journal.Controllers
 {
@@ -20,6 +23,9 @@ namespace game_journal.Controllers
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+
 
         public GamesController(ApplicationDbContext context, IHttpClientFactory clientFactory)
         {
@@ -53,7 +59,7 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,genres");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -67,6 +73,7 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
+                    GenreIds = game.GenreIds
                 };
                 searchedGame.Add(newGame);
             }
@@ -108,6 +115,23 @@ namespace game_journal.Controllers
             return View(singleGameFromApi);
         }
 
+        public async Task<IActionResult> SaveGame(int id)
+        {
+            // save id in a gameId variable
+            var gameId = id;
+            // get user 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // gets user id
+            var game = _context.Games.Where(g => g.GameId == gameId);
+            var newGame = new Game
+            {
+                UserId = userId
+            };
+
+            _context.Add(newGame);
+            await _context.SaveChangesAsync();
+            
+            return View();
+        }
         // GET: Games/Create
         //public IActionResult Create()
         //{

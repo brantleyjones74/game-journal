@@ -20,7 +20,7 @@ namespace game_journal.Models
 
         [JsonPropertyName("first_release_date")]
         [Display(Name = "Release Date")]
-        public int ReleaseDate { get; set; }
+        public DateTime ReleaseDate { get; set; }
 
         // References to other models
         [JsonPropertyName("genres")]
