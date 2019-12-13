@@ -27,7 +27,7 @@ namespace game_journal.Controllers
             _context = context;
         }
         // GET: Games
-        public async Task<IActionResult> IndexAsync(string searchString) // returns a list of games from DB
+        public async Task<IActionResult> IndexAsync() // returns a list of games from DB
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
             var client = _clientFactory.CreateClient("igdb");
@@ -46,14 +46,6 @@ namespace game_journal.Controllers
                 };
                 gamesFromApi.Add(newGame);
             }
-
-           // var games = from g in gamesFromApi.Include(g => g.Name)
-             //           select g;
-
-            //if (!String.IsNullOrEmpty(searchString))
-            //{
-                //gamesFromApi = gamesFromApi.Where(g => g.Name.Contains(searchString)).ToList();
-            //}
 
             return View(gamesFromApi);
         }
