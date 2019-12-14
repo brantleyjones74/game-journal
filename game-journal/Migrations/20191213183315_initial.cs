@@ -49,6 +49,67 @@ namespace game_journal.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "Covers",
+                columns: table => new
+                {
+                    CoverId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Url = table.Column<string>(nullable: true),
+                    PxlHeight = table.Column<int>(nullable: false),
+                    PxlWidth = table.Column<int>(nullable: false),
+                    GameId = table.Column<int>(nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Covers", x => x.CoverId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GameGenres",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GameId = table.Column<int>(nullable: false),
+                    GameName = table.Column<string>(nullable: true),
+                    GenreId = table.Column<int>(nullable: false),
+                    GenreName = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GameGenres", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "GamePlatforms",
+                columns: table => new
+                {
+                    Id = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    GameId = table.Column<int>(nullable: false),
+                    GameName = table.Column<string>(nullable: true),
+                    PlatformId = table.Column<int>(nullable: false),
+                    PlatformName = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_GamePlatforms", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Genres",
+                columns: table => new
+                {
+                    GenreId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Genres", x => x.GenreId);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "AspNetRoleClaims",
                 columns: table => new
                 {
@@ -158,11 +219,10 @@ namespace game_journal.Migrations
                 name: "Games",
                 columns: table => new
                 {
-                    GameId = table.Column<string>(nullable: false),
+                    GameId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(nullable: false),
-                    Genre = table.Column<string>(nullable: true),
                     ReleaseDate = table.Column<DateTime>(nullable: false),
-                    ImgUrl = table.Column<string>(nullable: true),
                     Notes = table.Column<string>(nullable: true),
                     HoursPlayed = table.Column<int>(nullable: false),
                     UserRating = table.Column<int>(nullable: false),
@@ -186,10 +246,7 @@ namespace game_journal.Migrations
                 {
                     PlatformId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    Manufacturer = table.Column<string>(nullable: false),
-                    Model = table.Column<string>(nullable: false),
-                    Notes = table.Column<string>(nullable: true),
-                    UserId = table.Column<string>(nullable: true),
+                    Name = table.Column<string>(nullable: true),
                     ApplicationUserId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -271,7 +328,19 @@ namespace game_journal.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Covers");
+
+            migrationBuilder.DropTable(
+                name: "GameGenres");
+
+            migrationBuilder.DropTable(
+                name: "GamePlatforms");
+
+            migrationBuilder.DropTable(
                 name: "Games");
+
+            migrationBuilder.DropTable(
+                name: "Genres");
 
             migrationBuilder.DropTable(
                 name: "Platforms");

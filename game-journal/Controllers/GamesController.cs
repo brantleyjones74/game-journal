@@ -9,11 +9,13 @@ using game_journal.Data;
 using game_journal.Models;
 using System.Net.Http;
 using System.Web;
-//using Newtonsoft.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.IO;
 using Newtonsoft.Json;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace game_journal.Controllers
 {
@@ -21,6 +23,9 @@ namespace game_journal.Controllers
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly ApplicationDbContext _context;
+        private readonly UserManager<ApplicationUser> _userManager;
+        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
+
 
         public GamesController(ApplicationDbContext context, IHttpClientFactory clientFactory)
         {
@@ -51,6 +56,34 @@ namespace game_journal.Controllers
             return View(gamesFromApi);
         }
 
+        // GET: Search Games By Name
+        public async Task<IActionResult> SearchByName(string gameName)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,genres,cover,first_release_date");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+
+            List<Game> searchedGame = new List<Game>();
+
+            foreach (var game in deserializedGames)
+            {
+                Game newGame = new Game
+                {
+                    GameId = game.GameId,
+                    Name = game.Name,
+                    GenreIds = game.GenreIds,
+                    CoverId = game.CoverId,
+                    ReleaseDate = game.ReleaseDate
+                };
+                searchedGame.Add(newGame);
+            }
+
+            return View(searchedGame);
+
+        }
+
         // GET: Games/Details/5
         public async Task<IActionResult> Details(string id) // gets detail of selected game
         {
@@ -73,15 +106,55 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
+                    ReleaseDate = game.ReleaseDate,
+
                 };
                 gameFromApi.Add(newGame);
             }
 
-            Game singleGame = gameFromApi[0];
-            
-            return View(singleGame);
+            Game singleGameFromApi = gameFromApi[0];
+            ViewBag.gameObj = singleGameFromApi;
+            return View(singleGameFromApi);
         }
 
+        public async Task<IActionResult> SaveGame(Game singleGameFromApi)
+        {
+            // get user 
+            var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ModelState.Remove("UserId");
+
+            if (ModelState.IsValid)
+            {
+                singleGameFromApi.UserId = user;
+                _context.Add(singleGameFromApi);
+                await _context.SaveChangesAsync();
+            }
+            return View();
+
+            //singleGameFromApi.Name = Request.Form["Name"].ToString();
+
+            //var savedGameId = GameId;
+            //var savedGameName = Name;
+
+            //new Game savedGame = new Game
+            //{
+
+            //}
+
+            // model state value to save. refactor second create method
+        }
+
+
+        public async Task<IActionResult> GetGameById(int id)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+
+            return Ok(deserializedGame);
+        }
         // GET: Games/Create
         //public IActionResult Create()
         //{
@@ -188,5 +261,7 @@ namespace game_journal.Controllers
         //{
         //    return _context.Games.Any(e => e.GameId == id);
         //}
+
+
     }
 }
