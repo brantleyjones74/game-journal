@@ -120,9 +120,17 @@ namespace game_journal.Controllers
         public async Task<IActionResult> SaveGame(Game singleGameFromApi)
         {
             // get user 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier); // gets user id
+            var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            ModelState.Remove("UserId");
 
-            singleGameFromApi.UserId = userId;
+            if (ModelState.IsValid)
+            {
+                singleGameFromApi.UserId = user;
+                _context.Add(singleGameFromApi);
+                await _context.SaveChangesAsync();
+            }
+            return View();
+
             //singleGameFromApi.Name = Request.Form["Name"].ToString();
 
             //var savedGameId = GameId;
@@ -134,11 +142,6 @@ namespace game_journal.Controllers
             //}
 
             // model state value to save. refactor second create method
-
-            //_context.Add(savedGame);
-            await _context.SaveChangesAsync();
-
-            return View();
         }
 
 
