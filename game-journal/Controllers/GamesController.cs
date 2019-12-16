@@ -39,9 +39,11 @@ namespace game_journal.Controllers
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
+
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
             List<Game> gamesFromApi = new List<Game>();
+
 
             foreach (var game in deserializedGames)
             {
@@ -92,7 +94,7 @@ namespace game_journal.Controllers
                 return NotFound();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,first_release_date,genres,platforms&filter[id][eq]={id}");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -119,7 +121,6 @@ namespace game_journal.Controllers
 
         public async Task<IActionResult> SaveGame(Game singleGameFromApi)
         {
-            // get user 
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ModelState.Remove("UserId");
 
@@ -130,52 +131,35 @@ namespace game_journal.Controllers
                 await _context.SaveChangesAsync();
             }
             return View();
-
-            //singleGameFromApi.Name = Request.Form["Name"].ToString();
-
-            //var savedGameId = GameId;
-            //var savedGameName = Name;
-
-            //new Game savedGame = new Game
-            //{
-
-            //}
-
-            // model state value to save. refactor second create method
         }
 
-
-        public async Task<IActionResult> GetGameById(int id)
+        public async Task<IActionResult> MyGamesList()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+            //var model = new MyGamesViewModel();
+            var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return Ok(deserializedGame);
+            var userGames = _context.Games.Where(g => g.UserId == user).ToList();
+
+            //model.Games = userGames;
+
+            return await Task.Run(() => View(userGames));
         }
-        // GET: Games/Create
-        //public IActionResult Create()
-        //{
-        //    return View();
-        //}
 
-        // POST: Games/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("GameId,Name")] Game game)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(game);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(game);
-        //}
+        public async Task<IActionResult> MyGameDetails(int id)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
+
+            var game = await _context.Games.FirstOrDefaultAsync(m => m.GameId == id);
+            if (game == null)
+            {
+                return NotFound();
+            }
+
+            return View(game);
+        }
 
         // GET: Games/Edit/5
         //public async Task<IActionResult> Edit(string id)
