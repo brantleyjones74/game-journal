@@ -19,21 +19,41 @@ namespace game_journal.Models
         public string Name { get; set; }
 
         [JsonPropertyName("first_release_date")]
+        public ulong first_release_date { get; set; }
+
+        public DateTime _releaseDate { get; set; }
+
         [Display(Name = "Release Date")]
-        public DateTime ReleaseDate { get; set; }
+        public DateTime ReleaseDate
+        {
+            get
+            {
+                System.DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
+                return _releaseDate;
+            }
+            set 
+            {
+                System.DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
+                _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
+            }
+        }
+
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; }
 
         // References to other models
         [JsonPropertyName("genres")]
         [NotMapped]
-        public List<int> GenreIds { get; set; }
+        public List<Genre> Genres { get; set; }
+
+        [JsonProperty("platforms")]
+        [NotMapped]
+        public List<Platform> Platforms { get; set; }
 
         [JsonPropertyName("cover")]
         [NotMapped]
         public int CoverId { get; set; }
-
-        [JsonProperty("platforms")]
-        [NotMapped]
-        public List<int> PlatformIds { get; set; }
 
         // User entered properties
         public string Notes { get; set; }

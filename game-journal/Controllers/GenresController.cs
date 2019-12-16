@@ -22,50 +22,23 @@ namespace game_journal.Controllers
             _context = context;
         }
 
-        // Get genre by Id.
-        public async Task<IActionResult> SearchGenreById(int id)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/genres?fields=name&filter[id][eq]={id}");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var genreAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGenre = JsonConvert.DeserializeObject<List<Genre>>(genreAsJson);
-
-            List<Genre> genresFromApi = new List<Genre>();
-
-            foreach(var genre in deserializedGenre)
-            {
-                Genre newGenre = new Genre
-                {
-                    GenreId = genre.GenreId,
-                    Name = genre.Name
-                };
-
-                genresFromApi.Add(newGenre);
-
-            }
-
-            return View(genresFromApi);
-        }
-
-
         // GET: Genres/Details/5
-        public async Task<IActionResult> Details(int? id)
-        {
-            if (id == null)
-            {
-                return NotFound();
-            }
+        //public async Task<IActionResult> Details(int? id)
+        //{
+        //    if (id == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            var genre = await _context.Genres
-                .FirstOrDefaultAsync(m => m.GenreId == id);
-            if (genre == null)
-            {
-                return NotFound();
-            }
+        //    var genre = await _context.Genres
+        //        .FirstOrDefaultAsync(m => m.GenreId == id);
+        //    if (genre == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return View(genre);
-        }
+        //    return View(genre);
+        //}
 
         // GET: Genres/Create
         public IActionResult Create()

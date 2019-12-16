@@ -23,9 +23,6 @@ namespace game_journal.Controllers
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
-
 
         public GamesController(ApplicationDbContext context, IHttpClientFactory clientFactory)
         {
@@ -35,15 +32,13 @@ namespace game_journal.Controllers
         // GET: Games
         public async Task<IActionResult> IndexAsync() // returns a list of games from DB
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,genres.name,platforms.name,first_release_date,cover.url,summary");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
-
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
             List<Game> gamesFromApi = new List<Game>();
-
 
             foreach (var game in deserializedGames)
             {
@@ -61,13 +56,13 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,genres,cover,first_release_date");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&filter[id][eq]=1942");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
-            List<Game> searchedGame = new List<Game>();
+            List<Game> searchedGames = new List<Game>();
 
             foreach (var game in deserializedGames)
             {
@@ -75,21 +70,20 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    GenreIds = game.GenreIds,
-                    CoverId = game.CoverId,
-                    ReleaseDate = game.ReleaseDate
+                    Summary = game.Summary,
+
                 };
-                searchedGame.Add(newGame);
+                searchedGames.Add(newGame);
             }
 
-            return View(searchedGame);
+            return View(searchedGames);
 
         }
 
         // GET: Games/Details/5
-        public async Task<IActionResult> Details(string id) // gets detail of selected game
+        public async Task<IActionResult> Details(int id) // gets detail of selected game
         {
-            if (id == null)
+            if (id == 0)
             {
                 return NotFound();
             }

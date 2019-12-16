@@ -48,6 +48,15 @@ namespace game_journal.Controllers
             return View(platformsFromApi);
         }
 
+        //public async Task<IActionResult> GetAllPlatforms()
+        //{
+            //var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/platforms?fields=id,name");
+            //var client = _clientFactory.CreateClient("igdb");
+            //var response = await client.SendAsync(request);
+            //var platformAsJson = await response.Content.ReadAsStringAsync();
+            //var deserializedPlatform = JsonConvert.DeserializeObject<List<Platform>>(platformAsJson);
+        //}
+
 
         // GET: Platforms
         public async Task<IActionResult> Index()
