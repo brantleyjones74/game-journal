@@ -19,7 +19,7 @@ namespace game_journal.Models
         public string Name { get; set; }
 
         [JsonPropertyName("first_release_date")]
-        public ulong first_release_date { get; set; }
+        public long first_release_date { get; set; }
 
         public DateTime _releaseDate { get; set; }
 
@@ -35,7 +35,7 @@ namespace game_journal.Models
             set 
             {
                 System.DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-                _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
+                _releaseDate = dateTime.AddDays(first_release_date).ToLocalTime();
             }
         }
 

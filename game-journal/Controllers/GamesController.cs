@@ -32,7 +32,7 @@ namespace game_journal.Controllers
         // GET: Games
         public async Task<IActionResult> IndexAsync() // returns a list of games from DB
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,genres.name,platforms.name,first_release_date,cover.url,summary");
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover.url,summary");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -46,6 +46,8 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
+                    Summary = game.Summary,
+                    ReleaseDate = game.ReleaseDate
                 };
                 gamesFromApi.Add(newGame);
             }
@@ -56,7 +58,7 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&filter[id][eq]=1942");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -70,8 +72,7 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    Summary = game.Summary,
-
+                    first_release_date = game.first_release_date
                 };
                 searchedGames.Add(newGame);
             }
@@ -88,7 +89,7 @@ namespace game_journal.Controllers
                 return NotFound();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,first_release_date,genres,platforms&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,first_release_date,genres.name,platforms.name&filter[id][eq]={id}");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -103,7 +104,6 @@ namespace game_journal.Controllers
                     GameId = game.GameId,
                     Name = game.Name,
                     ReleaseDate = game.ReleaseDate,
-
                 };
                 gameFromApi.Add(newGame);
             }
@@ -124,7 +124,7 @@ namespace game_journal.Controllers
                 _context.Add(singleGameFromApi);
                 await _context.SaveChangesAsync();
             }
-            return View();
+            return View(MyGamesList());
         }
 
         public async Task<IActionResult> MyGamesList()
@@ -155,56 +155,56 @@ namespace game_journal.Controllers
             return View(game);
         }
 
-        // GET: Games/Edit/5
-        //public async Task<IActionResult> Edit(string id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
+        //GET: Games/Edit/5
+        public async Task<IActionResult> Edit(string id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-        //    var game = await _context.Games.FindAsync(id);
-        //    if (game == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return View(game);
-        //}
+            var game = await _context.Games.FindAsync(id);
+            if (game == null)
+            {
+                return NotFound();
+            }
+            return View(game);
+        }
 
-        // POST: Games/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(string id, [Bind("GameId,Name")] Game game)
-        //{
-        //    if (id != game.GameId)
-        //    {
-        //        return NotFound();
-        //    }
+        //POST: Games/Edit/5
+        //To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        //more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("GameId,Name")] Game game)
+        {
+            if (id != game.GameId)
+            {
+                return NotFound();
+            }
 
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            _context.Update(game);
-        //            await _context.SaveChangesAsync();
-        //        }
-        //        catch (DbUpdateConcurrencyException)
-        //        {
-        //            if (!GameExists(game.GameId))
-        //            {
-        //                return NotFound();
-        //            }
-        //            else
-        //            {
-        //                throw;
-        //            }
-        //        }
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(game);
-        //}
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(game);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!GameExists(game.GameId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(Index));
+            }
+            return View(game);
+        }
 
         // GET: Games/Delete/5
         //public async Task<IActionResult> Delete(string id)
@@ -235,10 +235,10 @@ namespace game_journal.Controllers
         //    return RedirectToAction(nameof(Index));
         //}
 
-        //private bool GameExists(string id)
-        //{
-        //    return _context.Games.Any(e => e.GameId == id);
-        //}
+        private bool GameExists(int id)
+        {
+            return _context.Games.Any(e => e.GameId == id);
+        }
 
 
     }
