@@ -21,9 +21,11 @@ namespace game_journal.Models
         [JsonPropertyName("first_release_date")]
         public long first_release_date { get; set; }
 
+        [DataType(DataType.Date)]
         public DateTime _releaseDate { get; set; }
 
         [Display(Name = "Release Date")]
+        [DataType(DataType.Date)]
         public DateTime ReleaseDate
         {
             get
@@ -35,7 +37,7 @@ namespace game_journal.Models
             set 
             {
                 System.DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
-                _releaseDate = dateTime.AddDays(first_release_date).ToLocalTime();
+                _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
             }
         }
 

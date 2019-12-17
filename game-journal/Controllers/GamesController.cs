@@ -47,7 +47,7 @@ namespace game_journal.Controllers
                     GameId = game.GameId,
                     Name = game.Name,
                     Summary = game.Summary,
-                    ReleaseDate = game.ReleaseDate
+                    first_release_date = game.first_release_date
                 };
                 gamesFromApi.Add(newGame);
             }
@@ -72,6 +72,7 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
+                    Summary = game.Summary,
                     first_release_date = game.first_release_date
                 };
                 searchedGames.Add(newGame);
@@ -89,7 +90,7 @@ namespace game_journal.Controllers
                 return NotFound();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,first_release_date,genres.name,platforms.name&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres.name,platforms.name&filter[id][eq]={id}");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -103,7 +104,8 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    ReleaseDate = game.ReleaseDate,
+                    Summary = game.Summary,
+                    first_release_date = game.first_release_date
                 };
                 gameFromApi.Add(newGame);
             }
@@ -156,7 +158,7 @@ namespace game_journal.Controllers
         }
 
         //GET: Games/Edit/5
-        public async Task<IActionResult> Edit(string id)
+        public async Task<IActionResult> Edit(int id)
         {
             if (id == null)
             {
@@ -201,39 +203,39 @@ namespace game_journal.Controllers
                         throw;
                     }
                 }
-                return RedirectToAction(nameof(Index));
+                return RedirectToAction(nameof(MyGamesList));
             }
             return View(game);
         }
 
         // GET: Games/Delete/5
-        //public async Task<IActionResult> Delete(string id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-        //    var game = await _context.Games
-        //        .FirstOrDefaultAsync(m => m.GameId == id);
-        //    if (game == null)
-        //    {
-        //        return NotFound();
-        //    }
+            var game = await _context.Games
+                .FirstOrDefaultAsync(m => m.GameId == id);
+            if (game == null)
+            {
+                return NotFound();
+            }
 
-        //    return View(game);
-        //}
+            return View(game);
+        }
 
         // POST: Games/Delete/5
-        //[HttpPost, ActionName("Delete")]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> DeleteConfirmed(string id)
-        //{
-        //    var game = await _context.Games.FindAsync(id);
-        //    _context.Games.Remove(game);
-        //    await _context.SaveChangesAsync();
-        //    return RedirectToAction(nameof(Index));
-        //}
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var game = await _context.Games.FindAsync(id);
+            _context.Games.Remove(game);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(MyGamesList));
+        }
 
         private bool GameExists(int id)
         {
