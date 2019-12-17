@@ -1,17 +1,18 @@
 ﻿@model game_journal.Models.Game
 
-<h4>Game</h4>
+<h4> @Html.DisplayFor(model => model.Name)</h4>
 <hr />
 <div class="row">
     <div class="col-md-4">
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="GameId" />
-            <div class="form-group">
-                <label asp-for="Name" class="control-label"></label>
-                <input asp-for="Name" class="form-control" />
-                <span asp-validation-for="Name" class="text-danger"></span>
-            </div>
+            <input type="hidden" asp-for="@Model.UserId" />
+            <input type="hidden" asp-for="@Model.Name" />
+            <input type="hidden" asp-for="@Model.first_release_date" />
+            <input type="hidden" asp-for="@Model._releaseDate" />
+            <input type="hidden" asp-for="@Model.ReleaseDate" />
+            <input type="hidden" asp-for="@Model.Summary" />
             <div class="form-group">
                 <label asp-for="Notes" class="control-label"></label>
                 <input asp-for="Notes" class="form-control" />
