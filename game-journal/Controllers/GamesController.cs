@@ -126,7 +126,7 @@ namespace game_journal.Controllers
                 _context.Add(singleGameFromApi);
                 await _context.SaveChangesAsync();
             }
-            return View(MyGamesList());
+            return RedirectToAction(nameof(MyGamesList));
         }
 
         public async Task<IActionResult> MyGamesList()

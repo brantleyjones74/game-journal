@@ -1,11 +1,11 @@
 ﻿@model IEnumerable<game_journal.Models.Game>
 
-    <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Games" asp-action="SearchByName">
-        <label>Search Games By Name</label>
-        <br />
-        <input class="form-control mr-sm-2" name="gameName" type="search" placeholder="" aria-label="Search">
-        <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-    </form>
+<form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Games" asp-action="SearchByName">
+    <label>Search Games By Name</label>
+    <br />
+    <input class="form-control mr-sm-2" name="gameName" type="search" placeholder="" aria-label="Search">
+    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
+</form>
 <table class="table">
     <thead>
         <tr>
@@ -19,18 +19,25 @@
         </tr>
     </thead>
     <tbody>
-@foreach (var item in Model) {
-        <tr>
-            <td>
-                @Html.DisplayFor(modelItem => item.Name)
-            </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.ReleaseDate)
-            </td>
-            <td>
-                <a asp-action="Details" asp-route-id="@item.GameId">Details</a>
-            </td>
-        </tr>
-}
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>
+                    @Html.DisplayFor(modelItem => item.Name)
+                </td>
+                @if (item.first_release_date == 0)
+                {
+                    <td></td>
+                } else
+                {
+                <td>
+                    @Html.DisplayFor(modelItem => item.ReleaseDate)
+                </td>
+                }
+                <td>
+                    <a asp-action="Details" asp-route-id="@item.GameId">Details</a>
+                </td>
+            </tr>
+        }
     </tbody>
 </table>
