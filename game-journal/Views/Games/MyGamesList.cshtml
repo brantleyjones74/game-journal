@@ -1,11 +1,8 @@
 ﻿@model IEnumerable<game_journal.Models.Game>
 
-<form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Games" asp-action="SearchByName">
-    <label>Search Games By Name</label>
-    <br />
-    <input class="form-control mr-sm-2" name="gameName" type="search" placeholder="" aria-label="Search">
-    <button class="btn btn-outline-success my-2 my-sm-0" type="submit">Search</button>
-</form>
+<p>
+    <a asp-action="Create">Create New</a>
+</p>
 <table class="table">
     <thead>
         <tr>
@@ -14,6 +11,12 @@
             </th>
             <th>
                 @Html.DisplayNameFor(model => model.ReleaseDate)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.HoursPlayed)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.UserRating)
             </th>
             <th></th>
         </tr>
@@ -36,7 +39,15 @@
                     </td>
                 }
                 <td>
-                    <a asp-action="Details" asp-route-id="@item.GameId">Details</a>
+                    @Html.DisplayFor(modelItem => item.HoursPlayed)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.UserRating)
+                </td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@item.GameId">Edit</a> |
+                    <a asp-action="MyGameDetails" asp-route-id="@item.GameId">Details</a> |
+                    <a asp-action="Delete" asp-route-id="@item.GameId">Delete</a>
                 </td>
             </tr>
         }

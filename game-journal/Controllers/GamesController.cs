@@ -23,9 +23,6 @@ namespace game_journal.Controllers
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly ApplicationDbContext _context;
-        private readonly UserManager<ApplicationUser> _userManager;
-        private Task<ApplicationUser> GetCurrentUserAsync() => _userManager.GetUserAsync(HttpContext.User);
-
 
         public GamesController(ApplicationDbContext context, IHttpClientFactory clientFactory)
         {
@@ -35,7 +32,7 @@ namespace game_journal.Controllers
         // GET: Games
         public async Task<IActionResult> IndexAsync() // returns a list of games from DB
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover.url,summary");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -49,6 +46,8 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
+                    Summary = game.Summary,
+                    first_release_date = game.first_release_date
                 };
                 gamesFromApi.Add(newGame);
             }
@@ -59,13 +58,13 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,genres,cover,first_release_date");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
-            List<Game> searchedGame = new List<Game>();
+            List<Game> searchedGames = new List<Game>();
 
             foreach (var game in deserializedGames)
             {
@@ -73,26 +72,25 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    GenreIds = game.GenreIds,
-                    CoverId = game.CoverId,
-                    ReleaseDate = game.ReleaseDate
+                    Summary = game.Summary,
+                    first_release_date = game.first_release_date
                 };
-                searchedGame.Add(newGame);
+                searchedGames.Add(newGame);
             }
 
-            return View(searchedGame);
+            return View(searchedGames);
 
         }
 
         // GET: Games/Details/5
-        public async Task<IActionResult> Details(string id) // gets detail of selected game
+        public async Task<IActionResult> Details(int id) // gets detail of selected game
         {
-            if (id == null)
+            if (id == 0)
             {
                 return NotFound();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres.name,platforms.name&filter[id][eq]={id}");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -106,8 +104,8 @@ namespace game_journal.Controllers
                 {
                     GameId = game.GameId,
                     Name = game.Name,
-                    ReleaseDate = game.ReleaseDate,
-
+                    Summary = game.Summary,
+                    first_release_date = game.first_release_date
                 };
                 gameFromApi.Add(newGame);
             }
@@ -119,7 +117,6 @@ namespace game_journal.Controllers
 
         public async Task<IActionResult> SaveGame(Game singleGameFromApi)
         {
-            // get user 
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ModelState.Remove("UserId");
 
@@ -129,138 +126,121 @@ namespace game_journal.Controllers
                 _context.Add(singleGameFromApi);
                 await _context.SaveChangesAsync();
             }
-            return View();
-
-            //singleGameFromApi.Name = Request.Form["Name"].ToString();
-
-            //var savedGameId = GameId;
-            //var savedGameName = Name;
-
-            //new Game savedGame = new Game
-            //{
-
-            //}
-
-            // model state value to save. refactor second create method
+            return RedirectToAction(nameof(MyGamesList));
         }
 
-
-        public async Task<IActionResult> GetGameById(int id)
+        public async Task<IActionResult> MyGamesList()
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=*&filter[id][eq]={id}");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+            //var model = new MyGamesViewModel();
+            var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            return Ok(deserializedGame);
+            var userGames = _context.Games.Where(g => g.UserId == user).ToList();
+
+            //model.Games = userGames;
+
+            return await Task.Run(() => View(userGames));
         }
-        // GET: Games/Create
-        //public IActionResult Create()
-        //{
-        //    return View();
-        //}
 
-        // POST: Games/Create
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Create([Bind("GameId,Name")] Game game)
-        //{
-        //    if (ModelState.IsValid)
-        //    {
-        //        _context.Add(game);
-        //        await _context.SaveChangesAsync();
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(game);
-        //}
+        public async Task<IActionResult> MyGameDetails(int id)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
 
-        // GET: Games/Edit/5
-        //public async Task<IActionResult> Edit(string id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
+            var game = await _context.Games.FirstOrDefaultAsync(m => m.GameId == id);
+            if (game == null)
+            {
+                return NotFound();
+            }
 
-        //    var game = await _context.Games.FindAsync(id);
-        //    if (game == null)
-        //    {
-        //        return NotFound();
-        //    }
-        //    return View(game);
-        //}
+            return View(game);
+        }
 
-        // POST: Games/Edit/5
-        // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
-        // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> Edit(string id, [Bind("GameId,Name")] Game game)
-        //{
-        //    if (id != game.GameId)
-        //    {
-        //        return NotFound();
-        //    }
+        //GET: Games/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            if (id == 0)
+            {
+                return NotFound();
+            }
 
-        //    if (ModelState.IsValid)
-        //    {
-        //        try
-        //        {
-        //            _context.Update(game);
-        //            await _context.SaveChangesAsync();
-        //        }
-        //        catch (DbUpdateConcurrencyException)
-        //        {
-        //            if (!GameExists(game.GameId))
-        //            {
-        //                return NotFound();
-        //            }
-        //            else
-        //            {
-        //                throw;
-        //            }
-        //        }
-        //        return RedirectToAction(nameof(Index));
-        //    }
-        //    return View(game);
-        //}
+            var game = await _context.Games.FindAsync(id);
+            if (game == null)
+            {
+                return NotFound();
+            }
+            return View(game);
+        }
+
+        //POST: Games/Edit/5
+        //To protect from overposting attacks, please enable the specific properties you want to bind to, for 
+        //more details see http://go.microsoft.com/fwlink/?LinkId=317598.
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, [Bind("GameId,Name,first_release_date,_releaseDate,ReleaseDate,Summary,Notes,HoursPlayed,UserRating,UserId")] Game game)
+        {
+            if (id != game.GameId)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    _context.Update(game);
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!GameExists(game.GameId))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return RedirectToAction(nameof(MyGamesList));
+            }
+            return View(game);
+        }
 
         // GET: Games/Delete/5
-        //public async Task<IActionResult> Delete(string id)
-        //{
-        //    if (id == null)
-        //    {
-        //        return NotFound();
-        //    }
+        public async Task<IActionResult> Delete(int id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
 
-        //    var game = await _context.Games
-        //        .FirstOrDefaultAsync(m => m.GameId == id);
-        //    if (game == null)
-        //    {
-        //        return NotFound();
-        //    }
+            var game = await _context.Games
+                .FirstOrDefaultAsync(m => m.GameId == id);
+            if (game == null)
+            {
+                return NotFound();
+            }
 
-        //    return View(game);
-        //}
+            return View(game);
+        }
 
         // POST: Games/Delete/5
-        //[HttpPost, ActionName("Delete")]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> DeleteConfirmed(string id)
-        //{
-        //    var game = await _context.Games.FindAsync(id);
-        //    _context.Games.Remove(game);
-        //    await _context.SaveChangesAsync();
-        //    return RedirectToAction(nameof(Index));
-        //}
+        [HttpPost, ActionName("Delete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
+        {
+            var game = await _context.Games.FindAsync(id);
+            _context.Games.Remove(game);
+            await _context.SaveChangesAsync();
+            return RedirectToAction(nameof(MyGamesList));
+        }
 
-        //private bool GameExists(string id)
-        //{
-        //    return _context.Games.Any(e => e.GameId == id);
-        //}
+        private bool GameExists(int id)
+        {
+            return _context.Games.Any(e => e.GameId == id);
+        }
 
 
     }

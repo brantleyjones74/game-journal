@@ -6,6 +6,11 @@
     <RootNamespace>game_journal</RootNamespace>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="Migrations\20191216210317_changedGameProperitesToString.cs" />
+    <Compile Remove="Migrations\20191216210317_changedGameProperitesToString.Designer.cs" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="Microsoft.AspNetCore.Diagnostics.EntityFrameworkCore" Version="3.0.0" />

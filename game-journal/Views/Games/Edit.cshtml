@@ -1,0 +1,44 @@
+﻿@model game_journal.Models.Game
+
+<h4> @Html.DisplayFor(model => model.Name)</h4>
+<hr />
+<div class="row">
+    <div class="col-md-4">
+        <form asp-action="Edit">
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <input type="hidden" asp-for="GameId" />
+            <input type="hidden" asp-for="@Model.UserId" />
+            <input type="hidden" asp-for="@Model.Name" />
+            <input type="hidden" asp-for="@Model.first_release_date" />
+            <input type="hidden" asp-for="@Model._releaseDate" />
+            <input type="hidden" asp-for="@Model.ReleaseDate" />
+            <input type="hidden" asp-for="@Model.Summary" />
+            <div class="form-group">
+                <label asp-for="Notes" class="control-label"></label>
+                <input asp-for="Notes" class="form-control" />
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="HoursPlayed" class="control-label"></label>
+                <input asp-for="HoursPlayed" type="number" class="form-control" />
+                <span asp-validation-for="HoursPlayed" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <label asp-for="UserRating" class="control-label"></label>
+                <input asp-for="UserRating" type="number" max="5" min="1" class="form-control" />
+                <span asp-validation-for="UserRating" class="text-danger"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Save" class="btn btn-primary" />
+            </div>
+        </form>
+    </div>
+</div>
+
+<div>
+    <a asp-action="Index">Back to List</a>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
