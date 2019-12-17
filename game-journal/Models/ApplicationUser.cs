@@ -23,7 +23,5 @@ namespace game_journal.Models
         public string LastName { get; set; }
 
         public ICollection<Game> Games { get; set; }
-
-        public ICollection<Platform> Consoles { get; set; }
     }
 }

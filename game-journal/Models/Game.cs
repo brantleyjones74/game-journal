@@ -18,6 +18,10 @@ namespace game_journal.Models
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
+        [JsonPropertyName("summary")]
+        public string ApiSummary { get; set; }
+
+        // Release Date from API - convert from unix time stamp to MM/DD/YYYY
         [JsonPropertyName("first_release_date")]
         public long first_release_date { get; set; }
 
@@ -41,17 +45,14 @@ namespace game_journal.Models
             }
         }
 
-        [JsonPropertyName("summary")]
-        public string Summary { get; set; }
-
         // References to other models
         [JsonPropertyName("genres")]
         [NotMapped]
-        public List<Genre> Genres { get; set; }
+        public List<GameGenre> GameGenres { get; set; }
 
         [JsonProperty("platforms")]
         [NotMapped]
-        public List<Platform> Platforms { get; set; }
+        public List<GamePlatform> GamePlatforms { get; set; }
 
         [JsonPropertyName("cover")]
         [NotMapped]
