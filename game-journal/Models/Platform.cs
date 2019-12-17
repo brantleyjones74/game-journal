@@ -9,8 +9,10 @@ namespace game_journal.Models
 {
     public class Platform
     {
-        [JsonProperty("id")]
         public int PlatformId { get; set; }
+
+        [JsonProperty("id")]
+        public int ApiPlatformId { get; set; }
 
         [JsonProperty("name")]
         public string Name { get; set; }

@@ -18,6 +18,10 @@ namespace game_journal.Models
         [JsonPropertyName("name")]
         public string Name { get; set; }
 
+        [JsonPropertyName("summary")]
+        public string Summary { get; set; } // from API
+
+        // Release Date from API - convert from unix time stamp to MM/DD/YYYY
         [JsonPropertyName("first_release_date")]
         public long first_release_date { get; set; }
 
@@ -34,24 +38,21 @@ namespace game_journal.Models
                 _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
                 return _releaseDate;
             }
-            set 
+            set
             {
                 System.DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
                 _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
             }
         }
 
-        [JsonPropertyName("summary")]
-        public string Summary { get; set; }
-
         // References to other models
         [JsonPropertyName("genres")]
         [NotMapped]
-        public List<Genre> Genres { get; set; }
+        public List<GameGenre> GameGenres { get; set; }
 
         [JsonProperty("platforms")]
         [NotMapped]
-        public List<Platform> Platforms { get; set; }
+        public List<GamePlatform> GamePlatforms { get; set; }
 
         [JsonPropertyName("cover")]
         [NotMapped]
@@ -64,6 +65,7 @@ namespace game_journal.Models
 
         public int UserRating { get; set; }
 
-        public string UserId { get; set; }
+        public string ApplicationUserId { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
     }
 }

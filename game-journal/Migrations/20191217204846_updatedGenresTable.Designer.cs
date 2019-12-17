@@ -10,8 +10,8 @@ using game_journal.Data;
 namespace game_journal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20191213183315_initial")]
-    partial class initial
+    [Migration("20191217204846_updatedGenresTable")]
+    partial class updatedGenresTable
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -239,6 +239,9 @@ namespace game_journal.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
+                    b.Property<string>("ImageId")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("PxlHeight")
                         .HasColumnType("int");
 
@@ -276,11 +279,17 @@ namespace game_journal.Migrations
                     b.Property<DateTime>("ReleaseDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
+                    b.Property<string>("Summary")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("UserRating")
                         .HasColumnType("int");
+
+                    b.Property<DateTime>("_releaseDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("first_release_date")
+                        .HasColumnType("bigint");
 
                     b.HasKey("GameId");
 
@@ -344,6 +353,9 @@ namespace game_journal.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
+                    b.Property<int>("ApiGenreId")
+                        .HasColumnType("int");
+
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
@@ -359,15 +371,10 @@ namespace game_journal.Migrations
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
 
-                    b.Property<string>("ApplicationUserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("PlatformId");
-
-                    b.HasIndex("ApplicationUserId");
 
                     b.ToTable("Platforms");
                 });
@@ -425,15 +432,8 @@ namespace game_journal.Migrations
 
             modelBuilder.Entity("game_journal.Models.Game", b =>
                 {
-                    b.HasOne("game_journal.Models.ApplicationUser", null)
+                    b.HasOne("game_journal.Models.ApplicationUser", "ApplicationUser")
                         .WithMany("Games")
-                        .HasForeignKey("ApplicationUserId");
-                });
-
-            modelBuilder.Entity("game_journal.Models.Platform", b =>
-                {
-                    b.HasOne("game_journal.Models.ApplicationUser", null)
-                        .WithMany("Consoles")
                         .HasForeignKey("ApplicationUserId");
                 });
 #pragma warning restore 612, 618

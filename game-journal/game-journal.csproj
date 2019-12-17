@@ -7,8 +7,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Migrations\20191216210317_changedGameProperitesToString.cs" />
-    <Compile Remove="Migrations\20191216210317_changedGameProperitesToString.Designer.cs" />
+    <Compile Remove="Migrations\20191217172736_fixedColumnNameSummary.cs" />
+    <Compile Remove="Migrations\20191217172736_fixedColumnNameSummary.Designer.cs" />
   </ItemGroup>
 
 
@@ -21,6 +21,11 @@
     <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="3.0.0" />
     <PackageReference Include="Microsoft.VisualStudio.Web.CodeGeneration.Design" Version="3.0.0" />
     <PackageReference Include="Newtonsoft.Json" Version="12.0.3" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="Models\ViewModels\" />
   </ItemGroup>
 
 </Project>

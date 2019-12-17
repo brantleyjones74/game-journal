@@ -57,6 +57,7 @@ namespace game_journal.Migrations
                     Url = table.Column<string>(nullable: true),
                     PxlHeight = table.Column<int>(nullable: false),
                     PxlWidth = table.Column<int>(nullable: false),
+                    ImageId = table.Column<string>(nullable: true),
                     GameId = table.Column<int>(nullable: false)
                 },
                 constraints: table =>
@@ -107,6 +108,19 @@ namespace game_journal.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Genres", x => x.GenreId);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Platforms",
+                columns: table => new
+                {
+                    PlatformId = table.Column<int>(nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Name = table.Column<string>(nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Platforms", x => x.PlatformId);
                 });
 
             migrationBuilder.CreateTable(
@@ -222,11 +236,13 @@ namespace game_journal.Migrations
                     GameId = table.Column<int>(nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     Name = table.Column<string>(nullable: false),
+                    Summary = table.Column<string>(nullable: true),
+                    first_release_date = table.Column<long>(nullable: false),
+                    _releaseDate = table.Column<DateTime>(nullable: false),
                     ReleaseDate = table.Column<DateTime>(nullable: false),
                     Notes = table.Column<string>(nullable: true),
                     HoursPlayed = table.Column<int>(nullable: false),
                     UserRating = table.Column<int>(nullable: false),
-                    UserId = table.Column<string>(nullable: true),
                     ApplicationUserId = table.Column<string>(nullable: true)
                 },
                 constraints: table =>
@@ -234,26 +250,6 @@ namespace game_journal.Migrations
                     table.PrimaryKey("PK_Games", x => x.GameId);
                     table.ForeignKey(
                         name: "FK_Games_AspNetUsers_ApplicationUserId",
-                        column: x => x.ApplicationUserId,
-                        principalTable: "AspNetUsers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Restrict);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Platforms",
-                columns: table => new
-                {
-                    PlatformId = table.Column<int>(nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    Name = table.Column<string>(nullable: true),
-                    ApplicationUserId = table.Column<string>(nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Platforms", x => x.PlatformId);
-                    table.ForeignKey(
-                        name: "FK_Platforms_AspNetUsers_ApplicationUserId",
                         column: x => x.ApplicationUserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -302,11 +298,6 @@ namespace game_journal.Migrations
             migrationBuilder.CreateIndex(
                 name: "IX_Games_ApplicationUserId",
                 table: "Games",
-                column: "ApplicationUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Platforms_ApplicationUserId",
-                table: "Platforms",
                 column: "ApplicationUserId");
         }
 

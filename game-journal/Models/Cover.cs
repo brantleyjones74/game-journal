@@ -20,6 +20,9 @@ namespace game_journal.Models
         [JsonProperty("width")]
         public int PxlWidth { get; set; }
 
+        [JsonProperty("image_id")]
+        public string ImageId { get; set; }
+
         // Reference ID to Game Model
         [JsonProperty("game")]
         public int GameId { get; set; }
