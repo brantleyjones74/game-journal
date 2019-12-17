@@ -19,7 +19,7 @@ namespace game_journal.Models
         public string Name { get; set; }
 
         [JsonPropertyName("summary")]
-        public string ApiSummary { get; set; }
+        public string Summary { get; set; } // from API
 
         // Release Date from API - convert from unix time stamp to MM/DD/YYYY
         [JsonPropertyName("first_release_date")]
@@ -38,7 +38,7 @@ namespace game_journal.Models
                 _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
                 return _releaseDate;
             }
-            set 
+            set
             {
                 System.DateTime dateTime = new DateTime(1970, 1, 1, 0, 0, 0, 0, System.DateTimeKind.Utc);
                 _releaseDate = dateTime.AddSeconds(first_release_date).ToLocalTime();
@@ -65,6 +65,7 @@ namespace game_journal.Models
 
         public int UserRating { get; set; }
 
-        public string UserId { get; set; }
+        public string ApplicationUserId { get; set; }
+        public ApplicationUser ApplicationUser { get; set; }
     }
 }

@@ -9,8 +9,10 @@ namespace game_journal.Models
 {
     public class Genre
     {
-        [JsonProperty("id")]
         public int GenreId { get; set; }
+
+        [JsonProperty("id")]
+        public int ApiGenreId { get; set; }
 
         [JsonPropertyName("name")]
         public string Name { get; set; }

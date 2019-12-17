@@ -7,7 +7,7 @@
         <form asp-action="Edit">
             <div asp-validation-summary="ModelOnly" class="text-danger"></div>
             <input type="hidden" asp-for="GameId" />
-            <input type="hidden" asp-for="@Model.UserId" />
+            <input type="hidden" asp-for="@Model.ApplicationUserId" />
             <input type="hidden" asp-for="@Model.Name" />
             <input type="hidden" asp-for="@Model.first_release_date" />
             <input type="hidden" asp-for="@Model._releaseDate" />

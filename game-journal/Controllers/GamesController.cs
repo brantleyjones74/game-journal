@@ -118,11 +118,11 @@ namespace game_journal.Controllers
         public async Task<IActionResult> SaveGame(Game singleGameFromApi)
         {
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            ModelState.Remove("UserId");
+            ModelState.Remove("ApplicationUserId");
 
             if (ModelState.IsValid)
             {
-                singleGameFromApi.UserId = user;
+                singleGameFromApi.ApplicationUserId = user;
                 _context.Add(singleGameFromApi);
                 await _context.SaveChangesAsync();
             }
@@ -134,7 +134,7 @@ namespace game_journal.Controllers
             //var model = new MyGamesViewModel();
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            var userGames = _context.Games.Where(g => g.UserId == user).ToList();
+            var userGames = _context.Games.Where(g => g.ApplicationUserId == user).ToList();
 
             //model.Games = userGames;
 
@@ -178,7 +178,7 @@ namespace game_journal.Controllers
         //more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("GameId,Name,first_release_date,_releaseDate,ReleaseDate,Summary,Notes,HoursPlayed,UserRating,UserId")] Game game)
+        public async Task<IActionResult> Edit(int id, [Bind("GameId,Name,first_release_date,_releaseDate,ReleaseDate,Summary,Notes,HoursPlayed,UserRating,ApplicationUserId")] Game game)
         {
             if (id != game.GameId)
             {
