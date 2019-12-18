@@ -23,7 +23,7 @@ namespace game_journal.Controllers
             _clientFactory = clientFactory;
         }
 
-        public async Task<IActionResult> GetAllAndSavePlatforms()
+        public async Task<IActionResult> Index()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "/platforms?fields=name,id&limit=200");
             var client = _clientFactory.CreateClient("igdb");
@@ -37,7 +37,6 @@ namespace game_journal.Controllers
             {
                 Platform newPlatform = new Platform
                 {
-                    PlatformId = platformObj.ApiPlatformId,
                     ApiPlatformId = platformObj.ApiPlatformId,
                     Name = platformObj.Name
                 };
@@ -55,6 +54,23 @@ namespace game_journal.Controllers
                 platformsFromApi.Add(newPlatform);
             }
             return Redirect("/Games/Index");
+        }
+
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var platform = await _context.Platforms
+                .FirstOrDefaultAsync(m => m.PlatformId == id);
+            if (platform == null)
+            {
+                return NotFound();
+            }
+
+            return View(platform);
         }
 
         private bool PlatformExists(int id)

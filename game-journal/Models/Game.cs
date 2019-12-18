@@ -46,15 +46,23 @@ namespace game_journal.Models
         }
 
         // References to other models
-        [JsonPropertyName("genres")]
+        
         [NotMapped]
         public List<GameGenre> GameGenres { get; set; }
+        
+        [JsonProperty("genres")]
+        [NotMapped]
+        public List<int> GenreIds { get; set; }
 
-        [JsonProperty("platforms")]
+        
         [NotMapped]
         public List<GamePlatform> GamePlatforms { get; set; }
+        
+        [JsonProperty("platforms")]
+        [NotMapped]
+        public List<int> PlatformIds { get; set; }
 
-        [JsonPropertyName("cover")]
+        [JsonProperty("cover")]
         [NotMapped]
         public int CoverId { get; set; }
 

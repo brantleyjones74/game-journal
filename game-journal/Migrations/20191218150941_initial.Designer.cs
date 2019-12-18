@@ -10,8 +10,8 @@ using game_journal.Data;
 namespace game_journal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20191217204846_updatedGenresTable")]
-    partial class updatedGenresTable
+    [Migration("20191218150941_initial")]
+    partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
@@ -370,6 +370,9 @@ namespace game_journal.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int")
                         .HasAnnotation("SqlServer:ValueGenerationStrategy", SqlServerValueGenerationStrategy.IdentityColumn);
+
+                    b.Property<int>("ApiPlatformId")
+                        .HasColumnType("int");
 
                     b.Property<string>("Name")
                         .HasColumnType("nvarchar(max)");

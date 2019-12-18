@@ -16,6 +16,7 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
+using game_journal.Models.View_Models;
 
 namespace game_journal.Controllers
 {
@@ -32,7 +33,7 @@ namespace game_journal.Controllers
         // GET: Games
         public async Task<IActionResult> IndexAsync() // returns a list of games from DB
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover.url,summary");
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover,summary");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -85,12 +86,14 @@ namespace game_journal.Controllers
         // GET: Games/Details/5
         public async Task<IActionResult> Details(int id) // gets detail of selected game
         {
+            var model = new GameViewModel();
+
             if (id == 0)
             {
                 return NotFound();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres.name,platforms.name&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres,platforms,cover&filter[id][eq]={id}");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -105,25 +108,64 @@ namespace game_journal.Controllers
                     GameId = game.GameId,
                     Name = game.Name,
                     Summary = game.Summary,
-                    first_release_date = game.first_release_date
+                    first_release_date = game.first_release_date,
+                    GenreIds = game.GenreIds,
+                    PlatformIds = game.PlatformIds,
+                    CoverId = game.CoverId
                 };
                 gameFromApi.Add(newGame);
-            }
 
+                if (newGame.GenreIds != null && newGame.PlatformIds != null)
+                {
+                    // makes join table relationships for genres and platforms
+                    foreach (var genreId in newGame.GenreIds)
+                    {
+                        GameGenre gameGenre = new GameGenre
+                        {
+                            GameId = newGame.GameId,
+                            GenreId = genreId
+                        };
+                    }
+                    foreach (var platformId in newGame.PlatformIds)
+                    {
+                        GamePlatform gamePlatform = new GamePlatform
+                        {
+                            GameId = newGame.GameId,
+                            PlatformId = platformId
+                        };
+                    }
+                }
+            }
             Game singleGameFromApi = gameFromApi[0];
+
+            model.Game = singleGameFromApi;
+            // get genres and platforms in the model
+            if (singleGameFromApi.GenreIds != null && singleGameFromApi.PlatformIds != null)
+            {
+                foreach (var platformId in singleGameFromApi.PlatformIds)
+                {
+                    var platform = _context.Platforms.First(p => p.ApiPlatformId == platformId);
+                    model.Platforms.Add(platform);
+                }
+                foreach (var genreId in singleGameFromApi.GenreIds)
+                {
+                    var genre = _context.Genres.First(p => p.ApiGenreId == genreId);
+                    model.Genres.Add(genre);
+                }
+            }
             ViewBag.gameObj = singleGameFromApi;
-            return View(singleGameFromApi);
+            return View(model);
         }
 
-        public async Task<IActionResult> SaveGame(Game singleGameFromApi)
+        public async Task<IActionResult> SaveGame(Game savedGame)
         {
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ModelState.Remove("ApplicationUserId");
 
             if (ModelState.IsValid)
             {
-                singleGameFromApi.ApplicationUserId = user;
-                _context.Add(singleGameFromApi);
+                savedGame.ApplicationUserId = user;
+                _context.Add(savedGame);
                 await _context.SaveChangesAsync();
             }
             return RedirectToAction(nameof(MyGamesList));

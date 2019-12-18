@@ -24,7 +24,7 @@ namespace game_journal.Controllers
         }
 
         // Get all genres and add to DB
-        public async Task<IActionResult> GetAllAndSaveGenres()
+        public async Task<IActionResult> Index()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "/genres?fields=name,id&limit=40");
             var client = _clientFactory.CreateClient("igdb");
