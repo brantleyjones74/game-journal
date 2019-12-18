@@ -57,6 +57,23 @@ namespace game_journal.Controllers
             return Redirect("/Games/Index");
         }
 
+        public async Task<IActionResult> Details(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var platform = await _context.Platforms
+                .FirstOrDefaultAsync(m => m.PlatformId == id);
+            if (platform == null)
+            {
+                return NotFound();
+            }
+
+            return View(platform);
+        }
+
         private bool PlatformExists(int id)
         {
             return _context.Platforms.Any(e => e.ApiPlatformId == id);

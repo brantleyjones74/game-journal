@@ -32,6 +32,8 @@ namespace game_journal.Controllers
         // GET: Games
         public async Task<IActionResult> IndexAsync() // returns a list of games from DB
         {
+            var model = new GameViewModel();
+
             var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover.url,summary");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
@@ -90,7 +92,7 @@ namespace game_journal.Controllers
                 return NotFound();
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres.name,platforms.name&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres,platforms&filter[id][eq]={id}");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -105,7 +107,9 @@ namespace game_journal.Controllers
                     GameId = game.GameId,
                     Name = game.Name,
                     Summary = game.Summary,
-                    first_release_date = game.first_release_date
+                    first_release_date = game.first_release_date,
+                    GenreIds = game.GenreIds,
+                    PlatformIds = game.PlatformIds
                 };
                 gameFromApi.Add(newGame);
             }
