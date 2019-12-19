@@ -44,9 +44,9 @@
             Genres
         </dt>
         <dd class="col-sm-10">
-            @foreach (var genre in Model.Genres)
+            @foreach (var genre in Model.GameGenres)
             {
-                @(genre.Name)
+                @(genre.Genre.Name)
 
             }
         </dd>
@@ -54,9 +54,9 @@
             Platforms
         </dt>
         <dd class="col-sm-10">
-            @foreach (var platform in Model.Platforms)
+            @foreach (var platform in Model.GamePlatforms)
             {
-                @(platform.Name)
+                @(platform.Platform.Name)
 
             }
         </dd>
@@ -64,6 +64,6 @@
 </div>
 <div>
     <a asp-action="Edit" asp-route-id="@Model.Game.GameId">Edit</a> |
-    <a asp-action="Index">Back to List</a> |
+    <a asp-action="MyGamesList">Back to List</a> |
     <a asp-action="Delete" asp-route-id="@Model.Game.GameId">Delete</a> 
 </div>
