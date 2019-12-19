@@ -167,29 +167,29 @@ namespace game_journal.Controllers
                 gameToBeSaved.Game.ApplicationUserId = user;
                 _context.Add(gameToBeSaved.Game);
                 await _context.SaveChangesAsync();
-                if (gameToBeSaved.Game.GenreIds != null && gameToBeSaved.Game.PlatformIds != null)
-                {
-                    foreach (var genreId in gameToBeSaved.Game.GenreIds)
-                    {
-                        GameGenre gameGenre = new GameGenre
-                        {
-                            GameId = gameToBeSaved.Game.GameId,
-                            GenreId = genreId
-                        };
-                        _context.Add(gameGenre);
-                        await _context.SaveChangesAsync();
-                    }
-                    foreach (var platformId in gameToBeSaved.Game.PlatformIds)
-                    {
-                        GamePlatform gamePlatform = new GamePlatform
-                        {
-                            GameId = gameToBeSaved.Game.GameId,
-                            PlatformId = platformId
-                        };
-                        _context.Add(gamePlatform);
-                        await _context.SaveChangesAsync();
-                    }
-                }
+                //if (gameToBeSaved.Game.GenreIds != null && gameToBeSaved.Game.PlatformIds != null)
+                //{
+                    //foreach (var genreId in gameToBeSaved.Game.GenreIds)
+                    //{
+                        //GameGenre gameGenre = new GameGenre
+                        //{
+                            //GameId = gameToBeSaved.Game.GameId,
+                            //GenreId = genreId
+                        //};
+                        //_context.Add(gameGenre);
+                        //await _context.SaveChangesAsync();
+                    //}
+                    //foreach (var platformId in gameToBeSaved.Game.PlatformIds)
+                    //{
+                        //GamePlatform gamePlatform = new GamePlatform
+                        //{
+                            //GameId = gameToBeSaved.Game.GameId,
+                            //PlatformId = platformId
+                        //};
+                        //_context.Add(gamePlatform);
+                        //await _context.SaveChangesAsync();
+                    //}
+                //}
 
             }
             return RedirectToAction(nameof(MyGamesList));
@@ -216,13 +216,13 @@ namespace game_journal.Controllers
                 .FirstOrDefaultAsync(m => m.GameId == id);
             model.Game = game;
 
-            model.GameGenres = await _context.GameGenres.Include(g => g.Genre)
-                .Where(g => g.GameId == id)
-                .ToListAsync();
+            //model.GameGenres = await _context.GameGenres.Include(g => g.Genre)
+                //.Where(g => g.GameId == id)
+                //.ToListAsync();
 
-            model.GamePlatforms = await _context.GamePlatforms.Include(p => p.Platform)
-                .Where(p => p.GameId == id)
-                .ToListAsync();
+            //model.GamePlatforms = await _context.GamePlatforms.Include(p => p.Platform)
+                //.Where(p => p.GameId == id)
+                //.ToListAsync();
 
 
             return View(model);
