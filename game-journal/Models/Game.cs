@@ -69,8 +69,10 @@ namespace game_journal.Models
         // User entered properties
         public string Notes { get; set; }
 
+        [Display(Name = "Hours Played")]
         public int HoursPlayed { get; set; }
 
+        [Display(Name = "My Rating")]
         public int UserRating { get; set; }
 
         public string ApplicationUserId { get; set; }

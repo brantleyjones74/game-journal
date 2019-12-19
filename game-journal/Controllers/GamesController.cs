@@ -20,6 +20,7 @@ using game_journal.Models.View_Models;
 
 namespace game_journal.Controllers
 {
+    [Authorize]
     public class GamesController : Controller
     {
         private readonly IHttpClientFactory _clientFactory;
@@ -59,7 +60,7 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=100");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();

@@ -16,12 +16,15 @@
         <dd class="col-sm-10">
             @Html.DisplayFor(model => model.Game.Summary)
         </dd>
-        <dt class="col-sm-2">
-            @Html.DisplayNameFor(model => model.Game.ReleaseDate)
-        </dt>
-        <dd class="col-sm-10">
-            @Html.DisplayFor(model => model.Game.ReleaseDate)
-        </dd>
+        @if (Model.Game.first_release_date != 0)
+        {
+            <dt class="col-sm-2">
+                @Html.DisplayNameFor(model => model.Game.ReleaseDate)
+            </dt>
+            <dd class="col-sm-10">
+                @Html.DisplayFor(model => model.Game.ReleaseDate)
+            </dd>
+        }
         <dt class="col-sm-2">
             @Html.DisplayNameFor(model => model.Game.Notes)
         </dt>
