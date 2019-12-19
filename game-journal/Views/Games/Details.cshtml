@@ -1,45 +1,79 @@
 ﻿@model game_journal.Models.View_Models.GameViewModel
 
-<form asp-controller="Games" asp-action="SaveGame" name="savedGame" method="post">
-    <div>
-        <h4>@Model.Game.Name</h4>
-        <hr />
-        <dl class="row">
-            <dt class="col-sm-2">
-                @Html.DisplayNameFor(model => model.Game.Summary)
-            </dt>
-            <dd class="col-sm-10">
-                @Html.DisplayFor(model => model.Game.Summary)
-            </dd>
+
+<div>
+    <h4>@Model.Game.Name</h4>
+    <hr />
+    <dl class="row">
+        <dt class="col-sm-2">
+            @Html.DisplayNameFor(model => model.Game.Summary)
+        </dt>
+        <dd class="col-sm-10">
+            @Html.DisplayFor(model => model.Game.Summary)
+        </dd>
+        @if (Model.Game.first_release_date != 0)
+        {
             <dt class="col-sm-2">
                 @Html.DisplayNameFor(model => model.Game.ReleaseDate)
             </dt>
             <dd class="col-sm-10">
                 @Html.DisplayFor(model => model.Game.ReleaseDate)
             </dd>
-            <dt class="col-sm-2">
-                Genres
-            </dt>
-            <dd class="col-sm-10">
-                @foreach (var genre in Model.Genres)
-                {
-                    @(genre.Name)
-                }
+        }
+        <dt class="col-sm-2">
+            Genres
+        </dt>
+        @if (Model.Genres.Count() == 0)
+        {
+            <dd></dd>
+        }
+        <dd class="col-sm-10">
 
-            </dd>
-            <dt class="col-sm-2">
-                Platforms
-            </dt>
-            <dd class="col-sm-10">
-                @foreach (var platform in Model.Platforms)
-                {
-                    @(platform.Name)
-                }
-            </dd>
-        </dl>
-    </div>
+            @foreach (var genre in Model.Genres)
+            {
+                @(genre.Name)
+
+            }
+
+        </dd>
+        <dt class="col-sm-2">
+            Platforms
+        </dt>
+        @if (Model.Genres.Count() == 0)
+        {
+            <dd></dd>
+        }
+        <dd class="col-sm-10">
+            @foreach (var platform in Model.Platforms)
+            {
+                @(platform.Name)
+
+            }
+        </dd>
+    </dl>
+</div>
+<form asp-controller="Games" asp-action="SaveGame" name="gameToBeSaved" method="post">
+    <input type="hidden" asp-for="Game.Name" value="@Model.Game.Name" />
+    <input type="hidden" asp-for="Game.first_release_date" value="@Model.Game.first_release_date" />
+    <input type="hidden" asp-for="Game._releaseDate" value="@Model.Game._releaseDate" />
+    <input type="hidden" asp-for="Game.ReleaseDate" value="@Model.Game.ReleaseDate" />
+    <input type="hidden" asp-for="Game.Summary" value="@Model.Game.Summary" />
+    @if (Model.Genres.Count() != 0 && Model.Platforms.Count() != 0)
+    {
+        @for (int i = 0; i < @Model.Game.PlatformIds.Count(); i++)
+        {
+            <input type="hidden" asp-for="Game.PlatformIds" value="@Model.Game.PlatformIds[i]" />
+        }
+        @for (int i = 0; i < @Model.Game.GenreIds.Count(); i++)
+        {
+            <input type="hidden" asp-for="Game.GenreIds" value="@Model.Game.GenreIds[i]" />
+        }
+    }
+    <input type="hidden" asp-for="Game.CoverId" value="@Model.Game.CoverId" />
+
+
     <div>
-        <input type="submit" class="btn btn-primary text-white" value="Save Game" /> 
+        <input type="submit" class="btn btn-primary text-white" value="Save Game" />
         <a asp-action="Index">Back to List</a>
     </div>
 </form>

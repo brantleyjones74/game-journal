@@ -13,10 +13,9 @@ namespace game_journal.Models
 
         [Required]
         public int GameId { get; set; }
-        public string GameName { get; set; }
+        public Game Game { get; set; }
 
-        [Required]
         public int GenreId { get; set; }
-        public string GenreName { get; set; }
+        public Genre Genre { get; set; }
     }
 }

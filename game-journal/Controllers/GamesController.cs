@@ -20,6 +20,7 @@ using game_journal.Models.View_Models;
 
 namespace game_journal.Controllers
 {
+    [Authorize]
     public class GamesController : Controller
     {
         private readonly IHttpClientFactory _clientFactory;
@@ -59,7 +60,7 @@ namespace game_journal.Controllers
         // GET: Search Games By Name
         public async Task<IActionResult> SearchByName(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=100");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
@@ -157,46 +158,76 @@ namespace game_journal.Controllers
             return View(model);
         }
 
-        public async Task<IActionResult> SaveGame(Game savedGame)
+        public async Task<IActionResult> SaveGame(GameViewModel gameToBeSaved)
         {
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
             ModelState.Remove("ApplicationUserId");
 
             if (ModelState.IsValid)
             {
-                savedGame.ApplicationUserId = user;
-                _context.Add(savedGame);
+                gameToBeSaved.Game.ApplicationUserId = user;
+                _context.Add(gameToBeSaved.Game);
                 await _context.SaveChangesAsync();
+                if (gameToBeSaved.Game.GenreIds != null && gameToBeSaved.Game.PlatformIds != null)
+                {
+                    foreach (var genreId in gameToBeSaved.Game.GenreIds)
+                    {
+                        var localGenreObj = _context.Genres.FirstOrDefault(g => g.ApiGenreId == genreId);
+                        GameGenre gameGenre = new GameGenre
+                        {
+                            GameId = gameToBeSaved.Game.GameId,
+                            GenreId = localGenreObj.GenreId
+                        };
+                        _context.Add(gameGenre);
+                        await _context.SaveChangesAsync();
+                    }
+                    foreach (var platformId in gameToBeSaved.Game.PlatformIds)
+                    {
+                        var localPlatformObj = _context.Platforms.FirstOrDefault(p => p.ApiPlatformId == platformId);
+                        GamePlatform gamePlatform = new GamePlatform
+                        {
+                            GameId = gameToBeSaved.Game.GameId,
+                            PlatformId = localPlatformObj.PlatformId
+                        };
+                        _context.Add(gamePlatform);
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
             }
             return RedirectToAction(nameof(MyGamesList));
         }
 
         public async Task<IActionResult> MyGamesList()
         {
-            //var model = new MyGamesViewModel();
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
             var userGames = _context.Games.Where(g => g.ApplicationUserId == user).ToList();
-
-            //model.Games = userGames;
 
             return await Task.Run(() => View(userGames));
         }
 
         public async Task<IActionResult> MyGameDetails(int id)
         {
+            var model = new GameViewModel();
             if (id == 0)
             {
                 return NotFound();
             }
 
-            var game = await _context.Games.FirstOrDefaultAsync(m => m.GameId == id);
-            if (game == null)
-            {
-                return NotFound();
-            }
+            var game = await _context.Games
+                .FirstOrDefaultAsync(m => m.GameId == id);
+            model.Game = game;
 
-            return View(game);
+            model.GameGenres = await _context.GameGenres.Include(g => g.Genre)
+            .Where(g => g.GameId == id)
+            .ToListAsync();
+
+            model.GamePlatforms = await _context.GamePlatforms.Include(p => p.Platform)
+            .Where(p => p.GameId == id)
+            .ToListAsync();
+
+            return View(model);
         }
 
         //GET: Games/Edit/5
@@ -253,7 +284,7 @@ namespace game_journal.Controllers
         // GET: Games/Delete/5
         public async Task<IActionResult> Delete(int id)
         {
-            if (id == null)
+            if (id == 0)
             {
                 return NotFound();
             }
@@ -283,7 +314,5 @@ namespace game_journal.Controllers
         {
             return _context.Games.Any(e => e.GameId == id);
         }
-
-
     }
 }
