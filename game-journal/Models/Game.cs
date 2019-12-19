@@ -21,7 +21,7 @@ namespace game_journal.Models
         [JsonPropertyName("summary")]
         public string Summary { get; set; } // from API
 
-        // Release Date from API - convert from unix time stamp to MM/DD/YYYY
+        // Release Date from API 
         [JsonPropertyName("first_release_date")]
         public long first_release_date { get; set; }
 

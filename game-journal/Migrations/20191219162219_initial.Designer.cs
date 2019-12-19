@@ -10,7 +10,7 @@ using game_journal.Data;
 namespace game_journal.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20191218150941_initial")]
+    [Migration("20191219162219_initial")]
     partial class initial
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -308,16 +308,14 @@ namespace game_journal.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<string>("GameName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("GenreId")
                         .HasColumnType("int");
 
-                    b.Property<string>("GenreName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("GenreId");
 
                     b.ToTable("GameGenres");
                 });
@@ -332,16 +330,14 @@ namespace game_journal.Migrations
                     b.Property<int>("GameId")
                         .HasColumnType("int");
 
-                    b.Property<string>("GameName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<int>("PlatformId")
                         .HasColumnType("int");
 
-                    b.Property<string>("PlatformName")
-                        .HasColumnType("nvarchar(max)");
-
                     b.HasKey("Id");
+
+                    b.HasIndex("GameId");
+
+                    b.HasIndex("PlatformId");
 
                     b.ToTable("GamePlatforms");
                 });
@@ -438,6 +434,36 @@ namespace game_journal.Migrations
                     b.HasOne("game_journal.Models.ApplicationUser", "ApplicationUser")
                         .WithMany("Games")
                         .HasForeignKey("ApplicationUserId");
+                });
+
+            modelBuilder.Entity("game_journal.Models.GameGenre", b =>
+                {
+                    b.HasOne("game_journal.Models.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("game_journal.Models.Genre", "Genre")
+                        .WithMany()
+                        .HasForeignKey("GenreId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("game_journal.Models.GamePlatform", b =>
+                {
+                    b.HasOne("game_journal.Models.Game", "Game")
+                        .WithMany()
+                        .HasForeignKey("GameId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("game_journal.Models.Platform", "Platform")
+                        .WithMany()
+                        .HasForeignKey("PlatformId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
