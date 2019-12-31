@@ -1,4 +1,5 @@
-﻿@model IEnumerable<game_journal.Models.Game>
+﻿@model PagedList.IPagedList<game_journal.Models.Game>
+@using PagedList.Mvc;
 
 <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Games" asp-action="SearchByName">
     <label>Search Games By Name</label>
@@ -10,10 +11,10 @@
     <thead>
         <tr>
             <th>
-                @Html.DisplayNameFor(model => model.Name)
+                @Html.DisplayName("Name")
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.ReleaseDate)
+                @Html.DisplayName("Release Date");
             </th>
             <th></th>
         </tr>
@@ -42,3 +43,12 @@
         }
     </tbody>
 </table>
+Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
+
+<ul class="pagination">
+    <li><a href="#">1</a></li>
+    <li><a href="#">2</a></li>
+    <li><a href="#">3</a></li>
+    <li><a href="#">4</a></li>
+    <li><a href="#">5</a></li>
+</ul>

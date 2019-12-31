@@ -17,6 +17,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using game_journal.Models.View_Models;
+using PagedList;
 
 namespace game_journal.Controllers
 {
@@ -58,16 +59,22 @@ namespace game_journal.Controllers
         }
 
         // GET: Search Games By Name
-        public async Task<IActionResult> SearchByName(string gameName)
+        public async Task<IActionResult> SearchByName(string gameName, string currentFilter, string sortOrder, int? page)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=100");
+            currentFilter = gameName;
+          
+
+            // request and deserialize from API
+            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=200");
             var client = _clientFactory.CreateClient("igdb");
             var response = await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
+            // new list of SearchedGames
             List<Game> searchedGames = new List<Game>();
 
+            // grabbing data from deserializedGames and add to searchedGames
             foreach (var game in deserializedGames)
             {
                 Game newGame = new Game
@@ -80,9 +87,17 @@ namespace game_journal.Controllers
                 searchedGames.Add(newGame);
             }
 
-            return View(searchedGames);
+            // paging
+            page = 1;
+            ViewBag.CurrentFilter = gameName;
+            int pageSize = 10;
+            int pageNumber = (page ?? 1);
 
+
+            return View(searchedGames.ToPagedList(pageNumber, pageSize));
         }
+
+       
 
         // GET: Games/Details/5
         public async Task<IActionResult> Details(int id) // gets detail of selected game
