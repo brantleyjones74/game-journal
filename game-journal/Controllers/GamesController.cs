@@ -52,7 +52,7 @@ namespace game_journal.Controllers
         }
 
         // GET: Search Games By Name
-        public async Task<IActionResult> SearchByName(string gameName, string currentFilter, string sortOrder, int? pageNumber)
+        public async Task<IActionResult> SearchByName(string gameName, string currentFilter, int? pageNumber)
         {
             // request and deserialize from API
             var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=200");
@@ -77,22 +77,14 @@ namespace game_journal.Controllers
                 searchedGames.Add(newGame);
             }
 
-            if (gameName != null)
-            {
-                pageNumber = 1;
-            }
-            else
-            {
-                gameName = currentFilter;
-            }
-
-
+            ViewData["CurrentFilter"] = searchedGames;
+            //currentFilter = searchedGames.ToString();
+            pageNumber = 1;
             int pageSize = 10;
-
             // takes a single page number. 
             // ?? represents null-coalescing operator. this defines a default value for a nullable type.
             // (pageNumber ?? 1) means return value of pageNumber if greater than 1 or return 1 if null.
-            return View(await PaginatedList<Game>.CreateAsync(searchedGames.AsQueryable().AsNoTracking(), pageNumber ?? 1, pageSize));
+            return View(await PaginatedList<Game>.CreateAsync(searchedGames, pageNumber ?? 1, pageSize));
         }
 
 

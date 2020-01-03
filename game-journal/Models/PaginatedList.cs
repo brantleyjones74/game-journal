@@ -35,10 +35,10 @@ namespace game_journal.Models
             }
         }
 
-        public static async Task<PaginatedList<Game>> CreateAsync(IQueryable<Game> source, int pageIndex, int pageSize)
+        public static async Task<PaginatedList<Game>> CreateAsync(List<Game> source, int pageIndex, int pageSize)
         {
-            var count = await source.CountAsync();
-            var items = await source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToListAsync();
+            var count = source.Count();
+            var items = source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
             return new PaginatedList<Game>(items, count, pageIndex, pageSize);
         }
     }
