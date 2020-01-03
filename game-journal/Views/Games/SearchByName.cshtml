@@ -1,5 +1,8 @@
-﻿@model PagedList.IPagedList<game_journal.Models.Game>
+﻿@model PaginatedList<game_journal.Models.Game>
+@using game_journal.Models;
+@using PagedList;
 @using PagedList.Mvc;
+
 
 <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Games" asp-action="SearchByName">
     <label>Search Games By Name</label>
@@ -43,12 +46,23 @@
         }
     </tbody>
 </table>
-Page @(Model.PageCount < Model.PageNumber ? 0 : Model.PageNumber) of @Model.PageCount
 
-<ul class="pagination">
-    <li><a href="#">1</a></li>
-    <li><a href="#">2</a></li>
-    <li><a href="#">3</a></li>
-    <li><a href="#">4</a></li>
-    <li><a href="#">5</a></li>
-</ul>
+@{
+    var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
+    var nextDisabled = !Model.HasNextPage ? "disabled" : "";
+}
+
+<a asp-action="Index"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex - 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @prevDisabled">
+    Previous
+</a>
+<a asp-action="Index"
+   asp-route-sortOrder="@ViewData["CurrentSort"]"
+   asp-route-pageNumber="@(Model.PageIndex + 1)"
+   asp-route-currentFilter="@ViewData["CurrentFilter"]"
+   class="btn btn-default @nextDisabled">
+    Next
+</a>

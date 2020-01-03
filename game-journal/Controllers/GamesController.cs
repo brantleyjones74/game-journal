@@ -1,19 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using game_journal.Data;
 using game_journal.Models;
 using System.Net.Http;
-using System.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.IO;
 using Newtonsoft.Json;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using game_journal.Models.View_Models;
@@ -59,11 +52,8 @@ namespace game_journal.Controllers
         }
 
         // GET: Search Games By Name
-        public async Task<IActionResult> SearchByName(string gameName, string currentFilter, string sortOrder, int? page)
+        public async Task<IActionResult> SearchByName(string gameName, string currentFilter, string sortOrder, int? pageNumber)
         {
-            currentFilter = gameName;
-          
-
             // request and deserialize from API
             var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=200");
             var client = _clientFactory.CreateClient("igdb");
@@ -87,17 +77,25 @@ namespace game_journal.Controllers
                 searchedGames.Add(newGame);
             }
 
-            // paging
-            page = 1;
-            ViewBag.CurrentFilter = gameName;
+            if (gameName != null)
+            {
+                pageNumber = 1;
+            }
+            else
+            {
+                gameName = currentFilter;
+            }
+
+
             int pageSize = 10;
-            int pageNumber = (page ?? 1);
 
-
-            return View(searchedGames.ToPagedList(pageNumber, pageSize));
+            // takes a single page number. 
+            // ?? represents null-coalescing operator. this defines a default value for a nullable type.
+            // (pageNumber ?? 1) means return value of pageNumber if greater than 1 or return 1 if null.
+            return View(await PaginatedList<Game>.CreateAsync(searchedGames.AsQueryable().AsNoTracking(), pageNumber ?? 1, pageSize));
         }
 
-       
+
 
         // GET: Games/Details/5
         public async Task<IActionResult> Details(int id) // gets detail of selected game
