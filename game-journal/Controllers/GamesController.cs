@@ -72,19 +72,21 @@ namespace game_journal.Controllers
                     GameId = game.GameId,
                     Name = game.Name,
                     Summary = game.Summary,
-                    first_release_date = game.first_release_date
+                    first_release_date = game.first_release_date,
+                    CoverId = game.CoverId
                 };
                 searchedGames.Add(newGame);
             }
 
-            ViewData["CurrentFilter"] = searchedGames;
+            //ViewData["CurrentFilter"] = searchedGames;
             //currentFilter = searchedGames.ToString();
-            pageNumber = 1;
-            int pageSize = 10;
+            //pageNumber = 1;
+            //int pageSize = 10;
             // takes a single page number. 
             // ?? represents null-coalescing operator. this defines a default value for a nullable type.
             // (pageNumber ?? 1) means return value of pageNumber if greater than 1 or return 1 if null.
-            return View(await PaginatedList<Game>.CreateAsync(searchedGames, pageNumber ?? 1, pageSize));
+            // return View(await PaginatedList<Game>.CreateAsync(searchedGames, pageNumber ?? 1, pageSize));
+            return View(searchedGames);
         }
 
 
@@ -120,6 +122,31 @@ namespace game_journal.Controllers
                     CoverId = game.CoverId
                 };
                 gameFromApi.Add(newGame);
+
+                if (game.CoverId != 0)
+                {
+                    var coverId = game.CoverId;
+                    var coverRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
+                    var coverClient = _clientFactory.CreateClient("igdb");
+                    var coverResponse = await client.SendAsync(coverRequest);
+                    var coverAsJson = await coverResponse.Content.ReadAsStringAsync();
+                    var deserializedCover = JsonConvert.DeserializeObject<List<Cover>>(coverAsJson);
+
+                    List<Cover> coverFromApi = new List<Cover>();
+
+                    foreach (var cover in deserializedCover)
+                    {
+                        Cover newCover = new Cover
+                        {
+                            CoverId = coverId,
+                            ImageId = cover.ImageId,
+                            PxlHeight = cover.PxlHeight,
+                            PxlWidth = cover.PxlWidth,
+                            Url = cover.Url,
+                        };
+                        model.Cover = newCover;
+                    }
+                }
 
                 if (newGame.GenreIds != null && newGame.PlatformIds != null)
                 {
@@ -181,7 +208,7 @@ namespace game_journal.Controllers
                         GameGenre gameGenre = new GameGenre
                         {
                             GameId = gameToBeSaved.Game.GameId,
-                            GenreId = localGenreObj.GenreId
+                            GenreId = localGenreObj.GenreId,
                         };
                         _context.Add(gameGenre);
                         await _context.SaveChangesAsync();

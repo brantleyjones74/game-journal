@@ -2,7 +2,9 @@
 
 
 <div>
+    <img src="@Model.Cover.Url" />
     <h4>@Model.Game.Name</h4>
+
     <hr />
     <dl class="row">
         <dt class="col-sm-2">
@@ -46,8 +48,7 @@
         <dd class="col-sm-10">
             @foreach (var platform in Model.Platforms)
             {
-                @(platform.Name)
-
+                @(platform.Name) <p> </p>
             }
         </dd>
     </dl>

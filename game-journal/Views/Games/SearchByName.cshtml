@@ -1,7 +1,8 @@
-﻿@model PaginatedList<game_journal.Models.Game>
-@using game_journal.Models;
-@using PagedList;
-@using PagedList.Mvc;
+﻿@*@model PaginatedList<game_journal.Models.Game>*@
+@*@using game_journal.Models;
+    @using PagedList;
+    @using PagedList.Mvc;*@
+@model IEnumerable<game_journal.Models.Game>
 
 
 <form class="form-inline my-2 my-lg-0" asp-area="" asp-controller="Games" asp-action="SearchByName">
@@ -17,7 +18,7 @@
                 @Html.DisplayName("Name")
             </th>
             <th>
-                @Html.DisplayName("Release Date");
+                @Html.DisplayName("Release Date")
             </th>
             <th></th>
         </tr>
@@ -47,7 +48,7 @@
     </tbody>
 </table>
 
-@{
+@*@{
     var prevDisabled = !Model.HasPreviousPage ? "disabled" : "";
     var nextDisabled = !Model.HasNextPage ? "disabled" : "";
 }
@@ -65,4 +66,4 @@
    asp-route-currentFilter="@ViewData["CurrentFilter"]"
    class="btn btn-default @nextDisabled">
     Next
-</a>
+</a>*@

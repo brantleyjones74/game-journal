@@ -13,5 +13,6 @@ namespace game_journal.Models.View_Models
         public virtual List<GameGenre> GameGenres { get; set; }
         public List<Platform> Platforms { get; set; } = new List<Platform>();
         public virtual List<GamePlatform> GamePlatforms { get; set; }
+        public Cover Cover { get; set; }
     }
 }
