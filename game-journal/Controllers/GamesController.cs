@@ -25,16 +25,15 @@ namespace game_journal.Controllers
             _clientFactory = clientFactory;
             _context = context;
         }
-        // GET: Games
-        public async Task<IActionResult> IndexAsync() // returns a list of games from DB
+
+        public async Task<IEnumerable<Game>> GameResponseHandler(HttpRequestMessage request)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover,summary");
             var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
+            var response =  await client.SendAsync(request);
             var gamesAsJson = await response.Content.ReadAsStringAsync();
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
-            List<Game> gamesFromApi = new List<Game>();
+            List<Game> games = new List<Game>();
 
             foreach (var game in deserializedGames)
             {
@@ -43,12 +42,21 @@ namespace game_journal.Controllers
                     GameId = game.GameId,
                     Name = game.Name,
                     Summary = game.Summary,
-                    first_release_date = game.first_release_date
+                    first_release_date = game.first_release_date,
+                    CoverId = game.CoverId
                 };
-                gamesFromApi.Add(newGame);
+                games.Add(newGame);
             }
 
-            return View(gamesFromApi);
+            return games;
+        }
+        // GET: Games
+        public async Task<IActionResult> IndexAsync() // returns a list of games from DB
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
+            IEnumerable<Game> games = await GameResponseHandler(request).ConfigureAwait(false);
+
+            return View(games);
         }
 
         // GET: Search Games By Name
