@@ -1,8 +1,12 @@
 ﻿@model IEnumerable<game_journal.Models.Game>
 
-<p>
-    <a asp-action="Create">Create New</a>
-</p>
+@using (Html.BeginForm())
+{
+    <p>
+        Find by name: @Html.TextBox("gameName")
+        <input type="submit" value="Search" />
+    </p>
+}
 <table class="table">
     <thead>
         <tr>

@@ -11,6 +11,7 @@ using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using game_journal.Models.View_Models;
 using PagedList;
+using System;
 
 namespace game_journal.Controllers
 {
@@ -26,37 +27,18 @@ namespace game_journal.Controllers
             _context = context;
         }
 
-        public async Task<IEnumerable<Game>> GameResponseHandler(HttpRequestMessage request)
-        {
-            var client = _clientFactory.CreateClient("igdb");
-            var response =  await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
-
-            List<Game> games = new List<Game>();
-
-            foreach (var game in deserializedGames)
-            {
-                Game newGame = new Game
-                {
-                    GameId = game.GameId,
-                    Name = game.Name,
-                    Summary = game.Summary,
-                    first_release_date = game.first_release_date,
-                    CoverId = game.CoverId
-                };
-                games.Add(newGame);
-            }
-
-            return games;
-        }
         // GET: Games
-        public async Task<IActionResult> IndexAsync() // returns a list of games from DB
+        public async Task<IActionResult> IndexAsync(string gameName)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
-            IEnumerable<Game> games = await GameResponseHandler(request).ConfigureAwait(false);
-
-            return View(games);
+            if (String.IsNullOrEmpty(gameName))
+            {
+                var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
+                IEnumerable<Game> games = await GameResponseHandler(request);
+                return View(games);
+            }
+            var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=*&limit=200");
+            IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
+            return View(searchedGames);
         }
 
         // GET: Search Games By Name
@@ -86,14 +68,6 @@ namespace game_journal.Controllers
                 searchedGames.Add(newGame);
             }
 
-            //ViewData["CurrentFilter"] = searchedGames;
-            //currentFilter = searchedGames.ToString();
-            //pageNumber = 1;
-            //int pageSize = 10;
-            // takes a single page number. 
-            // ?? represents null-coalescing operator. this defines a default value for a nullable type.
-            // (pageNumber ?? 1) means return value of pageNumber if greater than 1 or return 1 if null.
-            // return View(await PaginatedList<Game>.CreateAsync(searchedGames, pageNumber ?? 1, pageSize));
             return View(searchedGames);
         }
 
@@ -353,6 +327,34 @@ namespace game_journal.Controllers
         private bool GameExists(int id)
         {
             return _context.Games.Any(e => e.GameId == id);
+        }
+
+
+        /*************** HELPER METHODS ***************/
+        // Handles the response from the API for a game.
+        public async Task<IEnumerable<Game>> GameResponseHandler(HttpRequestMessage request)
+        {
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+
+            List<Game> games = new List<Game>();
+
+            foreach (var game in deserializedGames)
+            {
+                Game newGame = new Game
+                {
+                    GameId = game.GameId,
+                    Name = game.Name,
+                    Summary = game.Summary,
+                    first_release_date = game.first_release_date,
+                    CoverId = game.CoverId
+                };
+                games.Add(newGame);
+            }
+
+            return games;
         }
     }
 }
