@@ -22,7 +22,7 @@ namespace game_journal.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            return RedirectToAction("MyGamesList", "Games");
         }
 
         public IActionResult Privacy()

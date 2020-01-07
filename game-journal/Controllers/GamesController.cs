@@ -10,7 +10,6 @@ using Newtonsoft.Json;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using game_journal.Models.View_Models;
-using PagedList;
 using System;
 
 namespace game_journal.Controllers
@@ -28,50 +27,28 @@ namespace game_journal.Controllers
         }
 
         // GET: Games
-        public async Task<IActionResult> IndexAsync(string gameName)
+        public async Task<IActionResult> IndexAsync(string sortOrder, string searchString, string currentFilter, int? page)
         {
-            if (String.IsNullOrEmpty(gameName))
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
+            IEnumerable<Game> games = await GameResponseHandler(request);
+
+            if (!String.IsNullOrEmpty(searchString))
             {
-                var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
-                IEnumerable<Game> games = await GameResponseHandler(request);
-                return View(games);
-            }
-            var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=*&limit=200");
-            IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
-            return View(searchedGames);
-        }
+                var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*&limit=200");
+                IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
 
-        // GET: Search Games By Name
-        public async Task<IActionResult> SearchByName(string gameName, string currentFilter, int? pageNumber)
-        {
-            // request and deserialize from API
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=200");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+                page = 1;
+                searchString = currentFilter;
+                ViewBag.CurrentFilter = searchString;
 
-            // new list of SearchedGames
-            List<Game> searchedGames = new List<Game>();
 
-            // grabbing data from deserializedGames and add to searchedGames
-            foreach (var game in deserializedGames)
-            {
-                Game newGame = new Game
-                {
-                    GameId = game.GameId,
-                    Name = game.Name,
-                    Summary = game.Summary,
-                    first_release_date = game.first_release_date,
-                    CoverId = game.CoverId
-                };
-                searchedGames.Add(newGame);
+                SortGames(sortOrder, searchedGames);
+                return View(searchedGames);
             }
 
-            return View(searchedGames);
+            SortGames(sortOrder, games);
+            return View(games);
         }
-
-
 
         // GET: Games/Details/5
         public async Task<IActionResult> Details(int id) // gets detail of selected game
@@ -108,26 +85,9 @@ namespace game_journal.Controllers
                 if (game.CoverId != 0)
                 {
                     var coverId = game.CoverId;
-                    var coverRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
-                    var coverClient = _clientFactory.CreateClient("igdb");
-                    var coverResponse = await client.SendAsync(coverRequest);
-                    var coverAsJson = await coverResponse.Content.ReadAsStringAsync();
-                    var deserializedCover = JsonConvert.DeserializeObject<List<Cover>>(coverAsJson);
-
-                    List<Cover> coverFromApi = new List<Cover>();
-
-                    foreach (var cover in deserializedCover)
-                    {
-                        Cover newCover = new Cover
-                        {
-                            CoverId = coverId,
-                            ImageId = cover.ImageId,
-                            PxlHeight = cover.PxlHeight,
-                            PxlWidth = cover.PxlWidth,
-                            Url = cover.Url,
-                        };
-                        model.Cover = newCover;
-                    }
+                    List<Cover> coverList = await CoverApiHandler(coverId);
+                    Cover cover = coverList[0];
+                    model.Cover = cover;
                 }
 
                 if (newGame.GenreIds != null && newGame.PlatformIds != null)
@@ -354,6 +314,54 @@ namespace game_journal.Controllers
                 games.Add(newGame);
             }
 
+            return games;
+        }
+
+        public async Task<List<Cover>> CoverApiHandler(int coverId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var coverAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedCover = JsonConvert.DeserializeObject<List<Cover>>(coverAsJson);
+
+            List<Cover> coverFromApi = new List<Cover>();
+
+            foreach (var cover in deserializedCover)
+            {
+                Cover newCover = new Cover
+                {
+                    CoverId = coverId,
+                    ImageId = cover.ImageId,
+                    PxlHeight = cover.PxlHeight,
+                    PxlWidth = cover.PxlWidth,
+                    Url = cover.Url,
+                };
+                coverFromApi.Add(newCover);
+            }
+            return coverFromApi;
+        }
+
+        public IEnumerable<Game> SortGames(string sortOrder, IEnumerable<Game> games)
+        {
+            ViewBag.NameSortParm = sortOrder == "Name" ? "name_desc" : "Name";
+            ViewBag.DateSortParm = String.IsNullOrEmpty(sortOrder) ? "date_desc" : "";
+
+            switch (sortOrder)
+            {
+                case "Name":
+                    games = games.OrderBy(g => g.Name);
+                    break;
+                case "name_desc":
+                    games = games.OrderByDescending(g => g.Name);
+                    break;
+                case "date_desc":
+                    games = games.OrderByDescending(g => g.ReleaseDate);
+                    break;
+                default:
+                    games = games.OrderBy(g => g.ReleaseDate);
+                    break;
+            }
             return games;
         }
     }
