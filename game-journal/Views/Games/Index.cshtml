@@ -5,14 +5,22 @@
 }
 
 <h2>Games</h2>
-<div id="star-five"></div>
-@using (Html.BeginForm())
-{
+@*@using (Html.BeginForm())
+    {
     <p>
         Find by name: @Html.TextBox("searchString")
+        @Html.Hidden("buttonValue", "search")
         <input type="submit" value="Search" />
     </p>
-}
+    }*@
+
+<form asp-action="Index" asp-controller="Games" asp-route-buttonValue=null>
+    @*Find by name: @Html.TextBox("searchString")*@
+    <label>Find by name: </label>
+    <input name="searchString" type="text" />
+    <input type="submit" value="Search" />
+</form>
+
 <table class="table">
     <thead>
         <tr>
@@ -49,3 +57,18 @@
         }
     </tbody>
 </table>
+
+@if (ViewBag.ClickValue != 0 && ViewBag.ButtonValue == null)
+{
+    <a asp-controller="Games"
+       asp-action="Index"
+       asp-route-buttonValue="Previous"
+       asp-route-clickValue=@ViewBag.ClickValue
+       asp-route-searchString=@ViewBag.SearchString>Previous</a>
+}
+
+<a asp-controller="Games"
+   asp-action="Index"
+   asp-route-buttonValue="Next"
+   asp-route-clickValue=@ViewBag.ClickValue
+   asp-route-searchString=@ViewBag.SearchString>Next</a>

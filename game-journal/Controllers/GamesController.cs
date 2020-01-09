@@ -26,31 +26,81 @@ namespace game_journal.Controllers
             _context = context;
         }
 
-        public async Task<IActionResult> IndexAsync(string searchString)
+        public async Task<IActionResult> IndexAsync(string searchString, string buttonValue, int clickValue)
         {
-            // creates a new view model
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
-            // generic query to populate page
             var model = new GameViewModel();
+
+            if (buttonValue == "null" || buttonValue == null)
+            {
+                ViewData["ClickValue"] = 0;
+                ViewData["ButtonValue"] = null;
+            }
+
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
             /*
              Calls GameResponseHandler async method w/ HttpRequestMessage paramter
              Sets the response to IEnumerable<Game>
              */
             IEnumerable<Game> games = await GameResponseHandler(request);
 
+            if (buttonValue == "Next" && searchString == null)
+            {
+                var offsetValue = clickValue + 10;
+                ViewData["ClickValue"] = offsetValue;
+                var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?fields=*&offset={offsetValue}");
+                IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                model.Games = pagedGames;
+                return View(model);
+            }
+
+            if (buttonValue == "Previous" && searchString == null)
+            {
+                var offsetValue = clickValue - 10;
+                ViewData["ClickValue"] = offsetValue;
+                var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?fields=*&offset={offsetValue}");
+                IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                model.Games = pagedGames;
+                return View(model);
+            }
+
             model.Games = games; // sets Games in view model to IEnumerbale<Game> games
 
             // if search string is NOT null or empty
             if (!String.IsNullOrEmpty(searchString))
             {
-                // Makes new request to API w/ search parameter and a limit of 200.
-                var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*&limit=200");
+                ViewData["SearchString"] = searchString;
+                // Makes new request to API w/ search parameter and a limit of 10.
+                var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*");
                 // Call GameResponseHandler like before
                 IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
                 // Set the view model Games to searchedGames response.
                 model.Games = searchedGames;
+
+                if (buttonValue == "Next")
+                {
+                    var offsetValue = clickValue + 10;
+                    ViewData["ClickValue"] = offsetValue;
+                    var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?search={searchString}&fields=*&offset={offsetValue}");
+                    IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                    model.Games = pagedGames;
+                    return View(model);
+                }
+
+                if (buttonValue == "Previous")
+                {
+                    var offsetValue = clickValue - 10;
+                    ViewData["ClickValue"] = offsetValue;
+                    var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?search={searchString}&fields=*&offset={offsetValue}");
+                    IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                    model.Games = pagedGames;
+                    return View(model);
+                }
                 return View(model);
             }
+
+
+
+            model.Games = games;
             return View(model);
         }
 
@@ -352,14 +402,6 @@ namespace game_journal.Controllers
                 }
             }
             return games;
-        }
-
-        // Attempting pagination of Games.
-        public async Task<IEnumerable<Game>> PagedGames(string searchString)
-        {
-            var paginateRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*&limit=200&offset=10");
-            IEnumerable<Game> paginatedGames = await GameResponseHandler(paginateRequest);
-            return paginatedGames;
         }
 
         // CoverApiHandler which follows similar pattern as GameApiResponse.
