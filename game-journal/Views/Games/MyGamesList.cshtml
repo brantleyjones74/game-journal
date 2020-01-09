@@ -13,9 +13,6 @@
                 @Html.DisplayNameFor(model => model.ReleaseDate)
             </th>
             <th>
-                @Html.DisplayNameFor(model => model.HoursPlayed)
-            </th>
-            <th>
                 @Html.DisplayNameFor(model => model.UserRating)
             </th>
             <th></th>
@@ -38,12 +35,12 @@
                         @Html.DisplayFor(modelItem => item.ReleaseDate)
                     </td>
                 }
-                <td>
-                    @Html.DisplayFor(modelItem => item.HoursPlayed)
-                </td>
-                <td>
-                    @Html.DisplayFor(modelItem => item.UserRating)
-                </td>
+            <td>
+                @for (int i = 0; i < item.UserRating; i++)
+                {
+                    <img style="width:1em;" src="https://img.icons8.com/flat_round/64/000000/star--v1.png">
+                }
+            </td>
                 <td>
                     <a asp-action="Edit" asp-route-id="@item.GameId">Edit</a> |
                     <a asp-action="MyGameDetails" asp-route-id="@item.GameId">Details</a> |

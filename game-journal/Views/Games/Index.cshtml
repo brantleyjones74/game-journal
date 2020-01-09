@@ -1,11 +1,11 @@
-﻿@model IEnumerable<game_journal.Models.Game>
+﻿@model game_journal.Models.View_Models.GameViewModel
 
 @{
     ViewBag.Title = "Games";
 }
 
 <h2>Games</h2>
-
+<div id="star-five"></div>
 @using (Html.BeginForm())
 {
     <p>
@@ -17,16 +17,16 @@
     <thead>
         <tr>
             <th>
-                @Html.ActionLink("Name", "Index", new { sortOrder = ViewBag.NameSortParm })
+                Name
             </th>
             <th>
-                @Html.ActionLink("Release Date", "Index", new { sortOrder = ViewBag.DateSortParm })
+                Release Date
             </th>
             <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var item in Model)
+        @foreach (var item in Model.Games)
         {
             <tr>
                 <td>
