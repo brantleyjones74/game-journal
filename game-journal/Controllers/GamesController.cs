@@ -1,22 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using game_journal.Data;
 using game_journal.Models;
 using System.Net.Http;
-using System.Web;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using System.IO;
 using Newtonsoft.Json;
-using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 using game_journal.Models.View_Models;
+using System;
 
 namespace game_journal.Controllers
 {
@@ -31,57 +25,33 @@ namespace game_journal.Controllers
             _clientFactory = clientFactory;
             _context = context;
         }
-        // GET: Games
-        public async Task<IActionResult> IndexAsync() // returns a list of games from DB
+
+        public async Task<IActionResult> IndexAsync(string searchString)
         {
-            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=name,first_release_date,cover,summary");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+            // creates a new view model
+            var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
+            // generic query to populate page
+            var model = new GameViewModel();
+            /*
+             Calls GameResponseHandler async method w/ HttpRequestMessage paramter
+             Sets the response to IEnumerable<Game>
+             */
+            IEnumerable<Game> games = await GameResponseHandler(request);
 
-            List<Game> gamesFromApi = new List<Game>();
+            model.Games = games; // sets Games in view model to IEnumerbale<Game> games
 
-            foreach (var game in deserializedGames)
+            // if search string is NOT null or empty
+            if (!String.IsNullOrEmpty(searchString))
             {
-                Game newGame = new Game
-                {
-                    GameId = game.GameId,
-                    Name = game.Name,
-                    Summary = game.Summary,
-                    first_release_date = game.first_release_date
-                };
-                gamesFromApi.Add(newGame);
+                // Makes new request to API w/ search parameter and a limit of 200.
+                var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*&limit=200");
+                // Call GameResponseHandler like before
+                IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
+                // Set the view model Games to searchedGames response.
+                model.Games = searchedGames;
+                return View(model);
             }
-
-            return View(gamesFromApi);
-        }
-
-        // GET: Search Games By Name
-        public async Task<IActionResult> SearchByName(string gameName)
-        {
-            var request = new HttpRequestMessage(HttpMethod.Get, $"games?search={gameName}&fields=id,name,summary,cover,first_release_date&limit=100");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
-
-            List<Game> searchedGames = new List<Game>();
-
-            foreach (var game in deserializedGames)
-            {
-                Game newGame = new Game
-                {
-                    GameId = game.GameId,
-                    Name = game.Name,
-                    Summary = game.Summary,
-                    first_release_date = game.first_release_date
-                };
-                searchedGames.Add(newGame);
-            }
-
-            return View(searchedGames);
-
+            return View(model);
         }
 
         // GET: Games/Details/5
@@ -89,144 +59,156 @@ namespace game_journal.Controllers
         {
             var model = new GameViewModel();
 
+            // id is 0 return not found message.
             if (id == 0)
             {
                 return NotFound();
             }
 
+            // new request w/ filter of id of the game from the API.
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres,platforms,cover&filter[id][eq]={id}");
-            var client = _clientFactory.CreateClient("igdb");
-            var response = await client.SendAsync(request);
-            var gamesAsJson = await response.Content.ReadAsStringAsync();
-            var deserializedGame = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
-
-            List<Game> gameFromApi = new List<Game>();
-
-            foreach (var game in deserializedGame)
-            {
-                Game newGame = new Game
-                {
-                    GameId = game.GameId,
-                    Name = game.Name,
-                    Summary = game.Summary,
-                    first_release_date = game.first_release_date,
-                    GenreIds = game.GenreIds,
-                    PlatformIds = game.PlatformIds,
-                    CoverId = game.CoverId
-                };
-                gameFromApi.Add(newGame);
-
-                if (newGame.GenreIds != null && newGame.PlatformIds != null)
-                {
-                    // makes join table relationships for genres and platforms
-                    foreach (var genreId in newGame.GenreIds)
-                    {
-                        GameGenre gameGenre = new GameGenre
-                        {
-                            GameId = newGame.GameId,
-                            GenreId = genreId
-                        };
-                    }
-                    foreach (var platformId in newGame.PlatformIds)
-                    {
-                        GamePlatform gamePlatform = new GamePlatform
-                        {
-                            GameId = newGame.GameId,
-                            PlatformId = platformId
-                        };
-                    }
-                }
-            }
+            // call the GameResponseHandler
+            IEnumerable<Game> gameDetailsResponse = await GameResponseHandler(request);
+            // convert IEnumerable to List
+            var gameFromApi = gameDetailsResponse.ToList();
+            // pull out first (only) item from the list and set to an instance of a Game.
             Game singleGameFromApi = gameFromApi[0];
-
+            // set the Game in View Model to the single Game.
             model.Game = singleGameFromApi;
-            // get genres and platforms in the model
+
+            // If the coverId is not equal to 0
+            if (singleGameFromApi.CoverId != 0)
+            {
+                // set Id to var coverId
+                var coverId = singleGameFromApi.CoverId;
+                // Create a list of covers using async CoverApiHandler w/ Id as parameter.
+                List<Cover> coverList = await CoverApiHandler(coverId);
+                // Create an instance of a single cover from the first (and only) item in the list.
+                Cover cover = coverList[0];
+                // Set the Cover view model to the single instance.
+                model.Cover = cover;
+            }
+
+            /* NOTE: Local database was pre-populated w/ all platforms and genres from IGDB Api*/
+            // if genreIds and platformIds are not null
             if (singleGameFromApi.GenreIds != null && singleGameFromApi.PlatformIds != null)
             {
+                // foreach platform Id
                 foreach (var platformId in singleGameFromApi.PlatformIds)
                 {
+                    // query local DB for the first platform where the ApiPlatformId == platformId
                     var platform = _context.Platforms.First(p => p.ApiPlatformId == platformId);
+                    // add the platform to view model.
                     model.Platforms.Add(platform);
                 }
+                // foreach genre Id
                 foreach (var genreId in singleGameFromApi.GenreIds)
                 {
+                    // query local DB for the first genre where the ApiGenreId == genreId
                     var genre = _context.Genres.First(p => p.ApiGenreId == genreId);
+                    // Add genre to view model.
                     model.Genres.Add(genre);
                 }
             }
+            // put the singleGameFromApi in a ViewBag.
             ViewBag.gameObj = singleGameFromApi;
+            // return the View with the GameViewModel
             return View(model);
         }
 
         public async Task<IActionResult> SaveGame(GameViewModel gameToBeSaved)
         {
+            // Save the userId.
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            // Remove "ApplicationUserId" from ModelState
             ModelState.Remove("ApplicationUserId");
 
+            // If the ModelState is valid
             if (ModelState.IsValid)
             {
+                // Take the gameToBeSaved.Game and set the AppUserId to the user;
                 gameToBeSaved.Game.ApplicationUserId = user;
+                // Add the game to _context (ApplicationDbContext)
                 _context.Add(gameToBeSaved.Game);
+                // Save changes asynchronously. 
                 await _context.SaveChangesAsync();
+                // If the GenreIds and PlatformIds are not null.
                 if (gameToBeSaved.Game.GenreIds != null && gameToBeSaved.Game.PlatformIds != null)
                 {
+                    // for each GenreId 
                     foreach (var genreId in gameToBeSaved.Game.GenreIds)
                     {
+                        // save first genre where ApiGenreId == genreId to local variable
                         var localGenreObj = _context.Genres.FirstOrDefault(g => g.ApiGenreId == genreId);
+                        /* create instance of gameGenre and set the GameId to the id 
+                        of the Game and GenreId to id of the genre. */
                         GameGenre gameGenre = new GameGenre
                         {
                             GameId = gameToBeSaved.Game.GameId,
-                            GenreId = localGenreObj.GenreId
+                            GenreId = localGenreObj.GenreId,
                         };
+                        // add gameGenre to _context
                         _context.Add(gameGenre);
+                        // save changes
                         await _context.SaveChangesAsync();
                     }
+                    // for each platformId
                     foreach (var platformId in gameToBeSaved.Game.PlatformIds)
                     {
+                        // save first platform where ApiPlatformId == platformId to varialbe
                         var localPlatformObj = _context.Platforms.FirstOrDefault(p => p.ApiPlatformId == platformId);
+                        /* create instance of GamePlatform and set the GameId to the id of the
+                        game and the Platform Id to the id of the platform.*/
                         GamePlatform gamePlatform = new GamePlatform
                         {
                             GameId = gameToBeSaved.Game.GameId,
                             PlatformId = localPlatformObj.PlatformId
                         };
+                        // add gamePlatform to _context
                         _context.Add(gamePlatform);
+                        // save changes
                         await _context.SaveChangesAsync();
                     }
                 }
-
             }
+            // once saved redirect to logged in user's list of games.
             return RedirectToAction(nameof(MyGamesList));
         }
 
         public async Task<IActionResult> MyGamesList()
         {
+            // save userId
             var user = User.FindFirstValue(ClaimTypes.NameIdentifier);
-
+            // get all games where userId = logged in User's id.
             var userGames = _context.Games.Where(g => g.ApplicationUserId == user).ToList();
-
+            // return the view of user's games.
             return await Task.Run(() => View(userGames));
         }
 
+        // Allows user to see details of games saved to profile.
         public async Task<IActionResult> MyGameDetails(int id)
         {
+            // create instance of GameViewModel
             var model = new GameViewModel();
             if (id == 0)
             {
                 return NotFound();
             }
 
+            // get first or default game w/ matching id.
             var game = await _context.Games
                 .FirstOrDefaultAsync(m => m.GameId == id);
+            // set game to view model.
             model.Game = game;
-
+            // get info for genres
             model.GameGenres = await _context.GameGenres.Include(g => g.Genre)
             .Where(g => g.GameId == id)
             .ToListAsync();
-
+            // get info for platforms.
             model.GamePlatforms = await _context.GamePlatforms.Include(p => p.Platform)
             .Where(p => p.GameId == id)
             .ToListAsync();
-
+            // return the view.
             return View(model);
         }
 
@@ -313,6 +295,97 @@ namespace game_journal.Controllers
         private bool GameExists(int id)
         {
             return _context.Games.Any(e => e.GameId == id);
+        }
+
+
+        /*************** HELPER METHODS ***************/
+
+        // game response handler helper method w/ http request message as parameter
+        public async Task<IEnumerable<Game>> GameResponseHandler(HttpRequestMessage request)
+        {
+            // create a client using _clientFactory.
+            var client = _clientFactory.CreateClient("igdb");
+            // wait for response from the client.
+            var response = await client.SendAsync(request);
+            // read the response it returns as a JsonString.
+            var gamesAsJson = await response.Content.ReadAsStringAsync();
+            // deserialize string to a list of games 
+            var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
+
+            // create an empty list of games.
+            List<Game> games = new List<Game>();
+
+            // for each game after deserialization
+            foreach (var game in deserializedGames)
+            {
+                // create instance of a newGame and set values from the API.
+                Game newGame = new Game
+                {
+                    GameId = game.GameId,
+                    Name = game.Name,
+                    Summary = game.Summary,
+                    first_release_date = game.first_release_date,
+                    GenreIds = game.GenreIds,
+                    PlatformIds = game.PlatformIds,
+                    CoverId = game.CoverId
+                };
+                games.Add(newGame);
+                // if genreIds and platformIds are not null. then create instnace for necessary relationships.
+                if (newGame.GenreIds != null && newGame.PlatformIds != null)
+                {
+                    foreach (var genreId in newGame.GenreIds)
+                    {
+                        GameGenre gameGenre = new GameGenre
+                        {
+                            GameId = newGame.GameId,
+                            GenreId = genreId
+                        };
+                    }
+                    foreach (var platformId in newGame.PlatformIds)
+                    {
+                        GamePlatform gamePlatform = new GamePlatform
+                        {
+                            GameId = newGame.GameId,
+                            PlatformId = platformId
+                        };
+                    }
+                }
+            }
+            return games;
+        }
+
+        // Attempting pagination of Games.
+        public async Task<IEnumerable<Game>> PagedGames(string searchString)
+        {
+            var paginateRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*&limit=200&offset=10");
+            IEnumerable<Game> paginatedGames = await GameResponseHandler(paginateRequest);
+            return paginatedGames;
+        }
+
+        // CoverApiHandler which follows similar pattern as GameApiResponse.
+        public async Task<List<Cover>> CoverApiHandler(int coverId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var coverAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedCover = JsonConvert.DeserializeObject<List<Cover>>(coverAsJson);
+
+            List<Cover> coverFromApi = new List<Cover>();
+
+            foreach (var cover in deserializedCover)
+            {
+                Cover newCover = new Cover
+                {
+                    CoverId = coverId,
+                    ImageId = cover.ImageId,
+                    PxlHeight = cover.PxlHeight,
+                    PxlWidth = cover.PxlWidth,
+                    Url = cover.Url,
+                };
+                coverFromApi.Add(newCover);
+            }
+            return coverFromApi;
         }
     }
 }
