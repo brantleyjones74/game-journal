@@ -15,10 +15,9 @@
     }*@
 
 <form asp-action="Index" asp-controller="Games" asp-route-buttonValue=null>
-    @*Find by name: @Html.TextBox("searchString")*@
     <label>Find by name: </label>
     <input name="searchString" type="text" />
-    <input type="submit" value="Search" />
+    <input class="btn btn-success" type="submit" value="Search" />
 </form>
 
 <table class="table">
@@ -38,7 +37,9 @@
         {
             <tr>
                 <td>
-                    @Html.DisplayFor(modelItem => item.Name)
+                    <a style="color:black;" asp-action="Details" asp-route-id="@item.GameId">
+                        @Html.DisplayFor(modelItem => item.Name)
+                    </a>
                 </td>
                 @if (item.first_release_date == 0)
                 {
@@ -60,14 +61,16 @@
 
 @if (ViewBag.ClickValue != 0 && ViewBag.ButtonValue == null)
 {
-    <a asp-controller="Games"
+    <a class="btn btn-primary"
+       asp-controller="Games"
        asp-action="Index"
        asp-route-buttonValue="Previous"
        asp-route-clickValue=@ViewBag.ClickValue
        asp-route-searchString=@ViewBag.SearchString>Previous</a>
 }
 
-<a asp-controller="Games"
+<a class="btn btn-primary"
+   asp-controller="Games"
    asp-action="Index"
    asp-route-buttonValue="Next"
    asp-route-clickValue=@ViewBag.ClickValue
