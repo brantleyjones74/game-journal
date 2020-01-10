@@ -90,7 +90,7 @@ namespace game_journal.Controllers
                     ViewData["ClickValue"] = offsetValue;
                     var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?search={searchString}&fields=*&offset={offsetValue}");
                     IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
-                    List<Cover> pagedCoversForSearchList = await SetCoversToList(searchedGames);
+                    List<Cover> pagedCoversForSearchList = await SetCoversToList(pagedGames);
                     model.Covers = pagedCoversForSearchList;
                     model.Games = pagedGames;
                     return View(model);
@@ -102,7 +102,7 @@ namespace game_journal.Controllers
                     ViewData["ClickValue"] = offsetValue;
                     var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?search={searchString}&fields=*&offset={offsetValue}");
                     IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
-                    List<Cover> pagedCoversForSearchList = await SetCoversToList(searchedGames);
+                    List<Cover> pagedCoversForSearchList = await SetCoversToList(pagedGames);
                     model.Covers = pagedCoversForSearchList;
                     model.Games = pagedGames;
                     return View(model);
