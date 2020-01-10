@@ -42,6 +42,8 @@ namespace game_journal.Controllers
              Sets the response to IEnumerable<Game>
              */
             IEnumerable<Game> games = await GameResponseHandler(request);
+            List<Cover> coversForList = await SetCoversToList(games);
+            model.Covers = coversForList;
 
             if (buttonValue == "Next" && searchString == null)
             {
@@ -49,6 +51,8 @@ namespace game_journal.Controllers
                 ViewData["ClickValue"] = offsetValue;
                 var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?fields=*&offset={offsetValue}");
                 IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                List<Cover> pagedCoversForList = await SetCoversToList(pagedGames);
+                model.Covers = pagedCoversForList;
                 model.Games = pagedGames;
                 return View(model);
             }
@@ -59,6 +63,8 @@ namespace game_journal.Controllers
                 ViewData["ClickValue"] = offsetValue;
                 var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?fields=*&offset={offsetValue}");
                 IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                List<Cover> pagedCoversForList = await SetCoversToList(pagedGames);
+                model.Covers = pagedCoversForList;
                 model.Games = pagedGames;
                 return View(model);
             }
@@ -75,6 +81,8 @@ namespace game_journal.Controllers
                 IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
                 // Set the view model Games to searchedGames response.
                 model.Games = searchedGames;
+                List<Cover> searchCoversList = await SetCoversToList(searchedGames);
+                model.Covers = searchCoversList;
 
                 if (buttonValue == "Next")
                 {
@@ -82,6 +90,8 @@ namespace game_journal.Controllers
                     ViewData["ClickValue"] = offsetValue;
                     var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?search={searchString}&fields=*&offset={offsetValue}");
                     IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                    List<Cover> pagedCoversForSearchList = await SetCoversToList(pagedGames);
+                    model.Covers = pagedCoversForSearchList;
                     model.Games = pagedGames;
                     return View(model);
                 }
@@ -92,6 +102,8 @@ namespace game_journal.Controllers
                     ViewData["ClickValue"] = offsetValue;
                     var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?search={searchString}&fields=*&offset={offsetValue}");
                     IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
+                    List<Cover> pagedCoversForSearchList = await SetCoversToList(pagedGames);
+                    model.Covers = pagedCoversForSearchList;
                     model.Games = pagedGames;
                     return View(model);
                 }
@@ -132,7 +144,7 @@ namespace game_journal.Controllers
                 // set Id to var coverId
                 var coverId = singleGameFromApi.CoverId;
                 // Create a list of covers using async CoverApiHandler w/ Id as parameter.
-                List<Cover> coverList = await CoverApiHandler(coverId);
+                List<Cover> coverList = await CoverApiDetailsHandler(coverId);
                 // Create an instance of a single cover from the first (and only) item in the list.
                 Cover cover = coverList[0];
                 // Set the Cover view model to the single instance.
@@ -380,6 +392,7 @@ namespace game_journal.Controllers
                     CoverId = game.CoverId
                 };
                 games.Add(newGame);
+
                 // if genreIds and platformIds are not null. then create instnace for necessary relationships.
                 if (newGame.GenreIds != null && newGame.PlatformIds != null)
                 {
@@ -405,7 +418,7 @@ namespace game_journal.Controllers
         }
 
         // CoverApiHandler which follows similar pattern as GameApiResponse.
-        public async Task<List<Cover>> CoverApiHandler(int coverId)
+        public async Task<List<Cover>> CoverApiDetailsHandler(int coverId)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
             var client = _clientFactory.CreateClient("igdb");
@@ -429,6 +442,55 @@ namespace game_journal.Controllers
                 string newCoverUrl = newCover.Url;
                 string replacedCoverUrl = newCoverUrl.Replace("t_thumb", "t_cover_big");
                 newCover.Url = replacedCoverUrl;
+
+                coverFromApi.Add(newCover);
+            }
+            return coverFromApi;
+        }
+
+        public async Task<List<Cover>> SetCoversToList(IEnumerable<Game> games)
+        {
+            List<Cover> coversForList = new List<Cover>();
+
+            foreach (var game in games)
+            {
+                // If the coverId is not equal to 0
+                if (game.CoverId != 0)
+                {
+                    // set Id to var coverId
+                    var coverId = game.CoverId;
+                    // Create a list of covers using async CoverApiHandler w/ Id as parameter.
+                    List<Cover> covers = await CoverListHandler(coverId);
+                    Cover cover = covers[0];
+                    // Set the Cover view model to the single instance.
+                    coversForList.Add(cover);
+                }
+            }
+
+            return coversForList;
+        }
+
+        public async Task<List<Cover>> CoverListHandler(int coverId)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
+            var client = _clientFactory.CreateClient("igdb");
+            var response = await client.SendAsync(request);
+            var coverAsJson = await response.Content.ReadAsStringAsync();
+            var deserializedCover = JsonConvert.DeserializeObject<List<Cover>>(coverAsJson);
+
+            List<Cover> coverFromApi = new List<Cover>();
+
+            foreach (var cover in deserializedCover)
+            {
+                Cover newCover = new Cover
+                {
+                    GameId = cover.GameId,
+                    CoverId = coverId,
+                    ImageId = cover.ImageId,
+                    PxlHeight = cover.PxlHeight,
+                    PxlWidth = cover.PxlWidth,
+                    Url = cover.Url
+                };
 
                 coverFromApi.Add(newCover);
             }
