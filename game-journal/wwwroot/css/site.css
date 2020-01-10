@@ -19,6 +19,7 @@ a {
 
 .nav-item {
     font-size: large;
+    color: #ffffff;
 }
 
 .nav-pills .nav-link.active, .nav-pills .show > .nav-link {
@@ -79,4 +80,8 @@ body {
 /*Added styling for page*/
 .searchLabel {
     margin-right: 3px;
+}
+
+.navbar {
+    background-color: #800080;
 }
