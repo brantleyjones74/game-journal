@@ -484,6 +484,7 @@ namespace game_journal.Controllers
             {
                 Cover newCover = new Cover
                 {
+                    GameId = cover.GameId,
                     CoverId = coverId,
                     ImageId = cover.ImageId,
                     PxlHeight = cover.PxlHeight,
