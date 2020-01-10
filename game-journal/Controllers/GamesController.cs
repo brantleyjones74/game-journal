@@ -423,8 +423,13 @@ namespace game_journal.Controllers
                     ImageId = cover.ImageId,
                     PxlHeight = cover.PxlHeight,
                     PxlWidth = cover.PxlWidth,
-                    Url = cover.Url,
+                    Url = cover.Url
                 };
+
+                string newCoverUrl = newCover.Url;
+                string replacedCoverUrl = newCoverUrl.Replace("t_thumb", "t_cover_big");
+                newCover.Url = replacedCoverUrl;
+
                 coverFromApi.Add(newCover);
             }
             return coverFromApi;
