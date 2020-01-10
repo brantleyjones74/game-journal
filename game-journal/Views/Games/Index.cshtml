@@ -15,6 +15,7 @@
 <table class="table">
     <thead>
         <tr>
+            <th></th>
             <th>
                 Name
             </th>
@@ -28,6 +29,21 @@
         @foreach (var item in Model.Games)
         {
             <tr>
+                @if (item.CoverId == 0)
+                {
+                    <td></td>
+                }
+                else
+                {
+                    @foreach (var cover in Model.Covers)
+                    {
+                        @if (@item.CoverId == cover.CoverId)
+                        {
+                            <td><img src=@cover.Url /></td>
+                        }
+                    }
+
+                }
                 <td>
                     <a style="color:black;" asp-action="Details" asp-route-id="@item.GameId">
                         @Html.DisplayFor(modelItem => item.Name)
