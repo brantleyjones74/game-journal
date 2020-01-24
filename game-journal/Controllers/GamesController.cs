@@ -28,35 +28,52 @@ namespace game_journal.Controllers
 
         public async Task<IActionResult> IndexAsync(string searchString, string buttonValue, int clickValue)
         {
+            // Instantiates a GameViewModel to display games.
             var model = new GameViewModel();
 
+            // for pagination. Sets ClickValue = 0 and ButtonValue to null.
             if (buttonValue == "null" || buttonValue == null)
             {
+                // ViewData passes values back from Controller to View.
                 ViewData["ClickValue"] = 0;
                 ViewData["ButtonValue"] = null;
             }
 
+            /* 
+            Instantiates a new HttpRequestMessage using an Http Get Method on the API. 
+            Concatenates "/games?fields=*" to Base Address in Startup.cs 
+            */
             var request = new HttpRequestMessage(HttpMethod.Get, "/games?fields=*");
-            /*
-             Calls GameResponseHandler async method w/ HttpRequestMessage paramter
-             Sets the response to IEnumerable<Game>
-             */
+
+            //Calls GameResponseHandler async method w/ HttpRequestMessage paramter. Sets the response to IEnumerable<Game>
+            //Gets data from API to display for list of games. 
             IEnumerable<Game> games = await GameResponseHandler(request);
+            // Calls SetCoversToList async method w/ IEnumerable<Game> parameter. Response is a List<Cover>.
+            // Covers were different objs in API than games. This gets the thumbnail cover image for the list of games in Index view.
             List<Cover> coversForList = await SetCoversToList(games);
+            // Sets Covers in model to display with list of games.
             model.Covers = coversForList;
 
+            // If user clicks "Next" button and search string is null
             if (buttonValue == "Next" && searchString == null)
             {
+                // Set offsetValue = clickValue + 10. ClickValue changes when user clicks next or previous buttons.
                 var offsetValue = clickValue + 10;
+                // Sets ViewData "ClickValue" = offsetValue to pass back to the Index view.
                 ViewData["ClickValue"] = offsetValue;
+
+                //Follows the same process of getting data from API, just use offsetValue to get the next 10 results.
                 var pagedRequest = new HttpRequestMessage(HttpMethod.Get, $"/games?fields=*&offset={offsetValue}");
+
                 IEnumerable<Game> pagedGames = await GameResponseHandler(pagedRequest);
                 List<Cover> pagedCoversForList = await SetCoversToList(pagedGames);
                 model.Covers = pagedCoversForList;
                 model.Games = pagedGames;
+
                 return View(model);
             }
 
+            // Same for next button, but Previous decreases it by 10.
             if (buttonValue == "Previous" && searchString == null)
             {
                 var offsetValue = clickValue - 10;
@@ -71,19 +88,22 @@ namespace game_journal.Controllers
 
             model.Games = games; // sets Games in view model to IEnumerbale<Game> games
 
-            // if search string is NOT null or empty
+            // For searching for games.
             if (!String.IsNullOrEmpty(searchString))
             {
+                // Passes search string from ViewData = searchString parameter.
                 ViewData["SearchString"] = searchString;
-                // Makes new request to API w/ search parameter and a limit of 10.
+                // Makes new request to API w/ search parameter and a default limit of 10.
                 var searchRequest = new HttpRequestMessage(HttpMethod.Get, $"games?search={searchString}&fields=*");
-                // Call GameResponseHandler like before
+
+                // Handle API response same as before.
                 IEnumerable<Game> searchedGames = await GameResponseHandler(searchRequest);
-                // Set the view model Games to searchedGames response.
                 model.Games = searchedGames;
                 List<Cover> searchCoversList = await SetCoversToList(searchedGames);
                 model.Covers = searchCoversList;
 
+                // Next and Previous methods are same w/ search parameter in the request. 
+                // This should probably be cleaned up into a helper method.
                 if (buttonValue == "Next")
                 {
                     var offsetValue = clickValue + 10;
@@ -110,14 +130,12 @@ namespace game_journal.Controllers
                 return View(model);
             }
 
-
-
             model.Games = games;
             return View(model);
         }
 
         // GET: Games/Details/5
-        public async Task<IActionResult> Details(int id) // gets detail of selected game
+        public async Task<IActionResult> Details(int id) 
         {
             var model = new GameViewModel();
 
