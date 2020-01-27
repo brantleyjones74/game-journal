@@ -20,6 +20,7 @@ namespace game_journal.Controllers
             _logger = logger;
         }
 
+        // Home redirects to MyGamesList from Games Controller.
         public IActionResult Index()
         {
             return RedirectToAction("MyGamesList", "Games");

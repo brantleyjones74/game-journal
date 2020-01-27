@@ -23,6 +23,7 @@ namespace game_journal.Controllers
             _clientFactory = clientFactory;
         }
 
+        // Get all platforms and add to local DB.
         public async Task<IActionResult> Index()
         {
             var request = new HttpRequestMessage(HttpMethod.Get, "/platforms?fields=name,id&limit=200");

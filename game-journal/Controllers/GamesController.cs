@@ -28,7 +28,7 @@ namespace game_journal.Controllers
 
         public async Task<IActionResult> IndexAsync(string searchString, string buttonValue, int clickValue)
         {
-            // Instantiates a GameViewModel to display games.
+            // Instantiates a view model to display games.
             var model = new GameViewModel();
 
             // for pagination. Sets ClickValue = 0 and ButtonValue to null.
@@ -135,7 +135,7 @@ namespace game_journal.Controllers
         }
 
         // GET: Games/Details/5
-        public async Task<IActionResult> Details(int id) 
+        public async Task<IActionResult> Details(int id)
         {
             var model = new GameViewModel();
 
@@ -146,7 +146,7 @@ namespace game_journal.Controllers
             }
 
             // new request w/ filter of id of the game from the API.
-            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres,platforms,cover&filter[id][eq]={id}");
+            var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/games?fields=name,summary,first_release_date,genres,platforms,platforms,cover&filter[id][eq]={id}");
             // call the GameResponseHandler
             IEnumerable<Game> gameDetailsResponse = await GameResponseHandler(request);
             // convert IEnumerable to List
@@ -372,33 +372,34 @@ namespace game_journal.Controllers
             return RedirectToAction(nameof(MyGamesList));
         }
 
+
+
+        /*************** HELPER METHODS ***************/
+        /* NOTE: Still having repeat code. Need to find a way to make these functions smaller and pass what I need as parameters. */
+
         private bool GameExists(int id)
         {
             return _context.Games.Any(e => e.GameId == id);
         }
 
-
-        /*************** HELPER METHODS ***************/
-
         // game response handler helper method w/ http request message as parameter
-        public async Task<IEnumerable<Game>> GameResponseHandler(HttpRequestMessage request)
+        private async Task<IEnumerable<Game>> GameResponseHandler(HttpRequestMessage request)
         {
             // create a client using _clientFactory.
             var client = _clientFactory.CreateClient("igdb");
             // wait for response from the client.
             var response = await client.SendAsync(request);
-            // read the response it returns as a JsonString.
+            // reads the JSON response as a string.
             var gamesAsJson = await response.Content.ReadAsStringAsync();
-            // deserialize string to a list of games 
+            // deserializes gamesAsJson into a List<Game>.
             var deserializedGames = JsonConvert.DeserializeObject<List<Game>>(gamesAsJson);
 
             // create an empty list of games.
             List<Game> games = new List<Game>();
 
-            // for each game after deserialization
             foreach (var game in deserializedGames)
             {
-                // create instance of a newGame and set values from the API.
+                // declares a new Game. properties are set from API response. 
                 Game newGame = new Game
                 {
                     GameId = game.GameId,
@@ -409,11 +410,14 @@ namespace game_journal.Controllers
                     PlatformIds = game.PlatformIds,
                     CoverId = game.CoverId
                 };
+                // adds new game to the list of games.
                 games.Add(newGame);
 
-                // if genreIds and platformIds are not null. then create instnace for necessary relationships.
+                /*** Games have a many to many relationship with Platforms and Genres. ***/
+                // if the newGame GenreId and PlatformId are not null
                 if (newGame.GenreIds != null && newGame.PlatformIds != null)
                 {
+                    // for each genreId create a new GameGenre and set the values to the id of the Game and Genre.
                     foreach (var genreId in newGame.GenreIds)
                     {
                         GameGenre gameGenre = new GameGenre
@@ -422,6 +426,7 @@ namespace game_journal.Controllers
                             GenreId = genreId
                         };
                     }
+                    // for each platformId create a new GameGenre and set the values to the id of the Game and Platform.
                     foreach (var platformId in newGame.PlatformIds)
                     {
                         GamePlatform gamePlatform = new GamePlatform
@@ -432,11 +437,15 @@ namespace game_journal.Controllers
                     }
                 }
             }
+            // return the list of games.
             return games;
         }
 
-        // CoverApiHandler which follows similar pattern as GameApiResponse.
-        public async Task<List<Cover>> CoverApiDetailsHandler(int coverId)
+        /*** IGDB has a different endpoint for covers. Another request has to be made once we get the id of the cover from the game.
+             This method follows the same pattern as if we're getting a single game from the API. ***/
+
+        // Cover handle for API using the id of the cover as a parameter. The id comes from the game.
+        private async Task<List<Cover>> CoverApiDetailsHandler(int coverId)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
             var client = _clientFactory.CreateClient("igdb");
@@ -446,6 +455,7 @@ namespace game_journal.Controllers
 
             List<Cover> coverFromApi = new List<Cover>();
 
+            // Games do not have a many to many relationship with covers. Therefore no join tables are needed.
             foreach (var cover in deserializedCover)
             {
                 Cover newCover = new Cover
@@ -457,6 +467,7 @@ namespace game_journal.Controllers
                     Url = cover.Url
                 };
 
+                // replaces the thumbnail image of the game with a larger img by changing the cover.Url property.
                 string newCoverUrl = newCover.Url;
                 string replacedCoverUrl = newCoverUrl.Replace("t_thumb", "t_cover_big");
                 newCover.Url = replacedCoverUrl;
@@ -466,8 +477,10 @@ namespace game_journal.Controllers
             return coverFromApi;
         }
 
-        public async Task<List<Cover>> SetCoversToList(IEnumerable<Game> games)
+        // For index of games we need to set the covers to a list and pass IEnumerable<Game> games as parameter.
+        private async Task<List<Cover>> SetCoversToList(IEnumerable<Game> games)
         {
+            // instantiates a new List<Cover>
             List<Cover> coversForList = new List<Cover>();
 
             foreach (var game in games)
@@ -488,7 +501,8 @@ namespace game_journal.Controllers
             return coversForList;
         }
 
-        public async Task<List<Cover>> CoverListHandler(int coverId)
+        // Handles a list of Covers following same methods as a list of games from IGDB.
+        private async Task<List<Cover>> CoverListHandler(int coverId)
         {
             var request = new HttpRequestMessage(HttpMethod.Get, $"https://api-v3.igdb.com/covers?fields=*&filter[id][eq]={coverId}");
             var client = _clientFactory.CreateClient("igdb");
